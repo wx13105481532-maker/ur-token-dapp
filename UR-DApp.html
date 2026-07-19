@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>UR Agent - AI × Web3 × Cloud Power</title>
+<style>
+:root {
+  --bg-deep: #0C0000;
+  --card-bg: #1A0505;
+  --neon-red: #FF2244;
+  --gold: #FFCC44;
+  --cyan: #00CCFF;
+  --text-primary: #F0E0E0;
+  --text-secondary: #A09090;
+  --text-dim: #706060;
+  --border: #2A1515;
+  --success: #22CC66;
+  --white: #FFFFFF;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+body {
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app { max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:80px; position:relative; }
+
+/* Header */
+.header {
+  padding: 16px 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo-area { display:flex; align-items:center; gap:10px; }
+.logo-icon {
+  width:40px; height:40px; border-radius:10px;
+  background: linear-gradient(135deg, var(--neon-red), #CC1133);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#fff;
+}
+.logo-text { font-size:18px; font-weight:800; color:var(--text-primary); letter-spacing:0.5px; }
+.logo-text span { color:var(--neon-red); }
+
+.btn-wallet {
+  background: linear-gradient(135deg, var(--gold), #E6A800);
+  border:none; color:#1A0505; padding:8px 14px; border-radius:8px;
+  font-size:12px; font-weight:700; cursor:pointer;
+  transition: all 0.2s;
+}
+.btn-wallet:hover { transform:scale(1.03); opacity:0.9; }
+.btn-wallet.connected { background: var(--success); color:#fff; font-size:11px; }
+
+/* Navigator Tabs */
+.nav-tabs {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background: rgba(12,0,0,0.96); backdrop-filter:blur(12px);
+  border-top: 1px solid var(--border);
+  display:flex; z-index:1000;
+}
+.nav-tab {
+  flex:1; padding:10px 0 8px;
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  border:none; background:none; cursor:pointer;
+  color:var(--text-dim);
+  font-size:10px; font-weight:600;
+  transition: color 0.2s;
+}
+.nav-tab.active { color:var(--gold); }
+.nav-tab svg { width:22px; height:22px; fill:currentColor; }
+
+/* Page */
+.page { display:none; padding:0 16px; animation: fadeIn 0.25s ease; }
+.page.active { display:block; }
+
+@keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* Price Bar */
+.price-bar {
+  background: linear-gradient(135deg, rgba(255,34,68,0.15), rgba(0,204,255,0.10));
+  border:1px solid rgba(255,34,68,0.25);
+  border-radius:12px; padding:14px; margin-bottom:16px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.price-main { display:flex; align-items:center; gap:10px; }
+.price-token { font-size:11px; color:var(--text-secondary); }
+.price-token strong { color:var(--neon-red); font-size:13px; }
+.price-val { font-size:24px; font-weight:900; color:var(--gold); }
+.price-change { font-size:12px; font-weight:700; color:var(--success); }
+.price-vol { text-align:right; font-size:10px; color:var(--text-dim); }
+.price-vol strong { color:var(--cyan); display:block; font-size:15px; }
+
+/* Cards */
+.card {
+  background: var(--card-bg); border:1px solid var(--border);
+  border-radius:14px; padding:16px; margin-bottom:14px;
+}
+.card-title {
+  font-size:13px; font-weight:700; color:var(--text-secondary);
+  margin-bottom:12px; display:flex; align-items:center; gap:6px;
+}
+.card-title::before {
+  content:''; width:3px; height:16px; border-radius:2px;
+  background: var(--neon-red); display:inline-block;
+}
+
+/* Stat Grid */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-item {
+  background: rgba(255,34,68,0.06);
+  border:1px solid rgba(255,204,68,0.10);
+  border-radius:10px; padding:12px; text-align:center;
+}
+.stat-val { font-size:20px; font-weight:900; color:var(--gold); }
+.stat-val.cyan { color:var(--cyan); }
+.stat-label { font-size:10px; color:var(--text-dim); margin-top:3px; }
+
+/* Buttons */
+.btn-row { display:flex; gap:10px; margin-bottom:14px; }
+.btn-primary {
+  flex:1; padding:12px; border:none; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  background: linear-gradient(135deg, var(--neon-red), #CC1133);
+  color:#fff; transition: all 0.2s;
+}
+.btn-primary:hover { transform:scale(1.02); box-shadow: 0 0 20px rgba(255,34,68,0.3); }
+.btn-secondary {
+  flex:1; padding:12px; border:1px solid var(--gold); border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  background: transparent; color:var(--gold); transition: all 0.2s;
+}
+.btn-secondary:hover { background:rgba(255,204,68,0.08); }
+
+/* Input */
+.input-group { margin-bottom:12px; }
+.input-group label { font-size:11px; color:var(--text-secondary); display:block; margin-bottom:6px; }
+.input-row { display:flex; gap:8px; }
+.input-field {
+  flex:1; padding:12px 14px; border-radius:10px;
+  background: rgba(12,0,0,0.6); border:1px solid var(--border);
+  color:var(--text-primary); font-size:15px; outline:none;
+  transition: border 0.2s;
+}
+.input-field:focus { border-color: var(--neon-red); }
+.input-suffix { font-size:11px; color:var(--text-dim); padding-top:12px; }
+
+/* Tier Badge */
+.tier-badge {
+  display:inline-block; padding:4px 12px; border-radius:6px;
+  font-size:12px; font-weight:800; letter-spacing:0.5px;
+}
+.tier-v1 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v2 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v3 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v4 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v5 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v6 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-eternal { background:linear-gradient(135deg, var(--gold), #D49000); color:#1A0505; }
+
+/* Progress */
+.progress-section { margin-bottom:12px; }
+.progress-label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; }
+.progress-label span:first-child { color:var(--text-secondary); }
+.progress-label span:last-child { color:var(--gold); }
+.progress-bar {
+  width:100%; height:6px; background:rgba(255,255,255,0.08);
+  border-radius:3px; overflow:hidden;
+}
+.progress-fill {
+  height:100%; border-radius:3px;
+  background: linear-gradient(90deg, var(--neon-red), var(--gold));
+  transition: width 0.5s ease;
+}
+
+/* Tier Steps */
+.tier-steps { display:flex; justify-content:space-between; margin:12px 0; }
+.tier-step {
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:800;
+  background:rgba(255,255,255,0.06); color:var(--text-dim);
+  border:1px solid transparent;
+}
+.tier-step.done { background:var(--neon-red); color:#fff; border-color:var(--neon-red); }
+.tier-step.current { background:transparent; color:var(--gold); border:2px solid var(--gold); }
+.tier-step.eternal { background:linear-gradient(135deg, rgba(255,204,68,0.2), transparent); color:var(--gold); border:1px solid var(--gold); }
+
+/* Record List */
+.record-list { max-height:260px; overflow-y:auto; }
+.record-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:12px;
+}
+.record-item:last-child { border-bottom:none; }
+.record-left { display:flex; flex-direction:column; gap:2px; }
+.record-type { color:var(--text-primary); font-weight:600; }
+.record-time { color:var(--text-dim); font-size:10px; }
+.record-right { text-align:right; }
+.record-amount { font-weight:700; }
+.record-amount.positive { color:var(--success); }
+.record-amount.negative { color:var(--neon-red); }
+.record-status { font-size:10px; color:var(--text-dim); }
+
+/* Sub Tabs */
+.sub-tabs { display:flex; gap:0; margin-bottom:14px; }
+.sub-tab {
+  flex:1; padding:8px; text-align:center; border:none; cursor:pointer;
+  font-size:12px; font-weight:600; color:var(--text-dim);
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  transition: all 0.2s;
+}
+.sub-tab:first-child { border-radius:8px 0 0 8px; }
+.sub-tab:last-child { border-radius:0 8px 8px 0; }
+.sub-tab.active { background:rgba(255,204,68,0.10); color:var(--gold); border-color:var(--gold); }
+
+/* Analytics */
+.placeholder-chart {
+  width:100%; height:180px; border-radius:12px;
+  background:rgba(255,255,255,0.03); border:1px dashed var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--text-dim); font-size:12px; gap:6px; margin-bottom:14px;
+}
+.placeholder-chart svg { width:36px; height:36px; fill:var(--text-dim); }
+
+.kpi-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.kpi-item {
+  background:rgba(0,204,255,0.05); border:1px solid rgba(0,204,255,0.12);
+  border-radius:10px; padding:12px; text-align:center;
+}
+.kpi-val { font-size:16px; font-weight:800; color:var(--cyan); }
+.kpi-label { font-size:9px; color:var(--text-dim); margin-top:3px; }
+
+/* Social */
+.social-card {
+  background: linear-gradient(135deg, rgba(0,136,204,0.15), rgba(0,204,255,0.08));
+  border:1px solid rgba(0,204,255,0.2); border-radius:14px; padding:20px;
+  text-align:center; margin-bottom:14px; cursor:pointer; transition: all 0.2s;
+}
+.social-card:hover { transform:scale(1.02); }
+.social-icon { font-size:36px; margin-bottom:8px; }
+.social-name { font-size:16px; font-weight:800; color:var(--cyan); margin-bottom:4px; }
+.social-link { font-size:11px; color:var(--text-dim); word-break:break-all; }
+
+.social-links { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.social-link-item {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:10px;
+  padding:14px; text-align:center; cursor:pointer; transition: all 0.2s;
+}
+.social-link-item:hover { border-color:var(--cyan); }
+.social-link-item .icon { font-size:24px; margin-bottom:4px; }
+.social-link-item .name { font-size:12px; font-weight:600; color:var(--text-primary); }
+.social-link-item .status { font-size:9px; color:var(--text-dim); }
+
+.ref-generator { margin-bottom:14px; }
+.ref-output {
+  margin-top:8px; padding:12px; border-radius:10px;
+  background:rgba(0,204,255,0.06); border:1px solid rgba(0,204,255,0.15);
+  font-size:11px; color:var(--cyan); word-break:break-all; display:none;
+}
+
+.rank-list { }
+.rank-item {
+  display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.rank-num { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:rgba(255,255,255,0.08); color:var(--text-dim); }
+.rank-num.top1 { background:var(--gold); color:#1A0505; }
+.rank-num.top2 { background:rgba(255,204,68,0.4); color:var(--gold); }
+.rank-num.top3 { background:rgba(255,204,68,0.25); color:var(--gold); }
+.rank-info { flex:1; }
+.rank-name { font-size:13px; font-weight:600; }
+.rank-addr { font-size:10px; color:var(--text-dim); }
+.rank-value { font-size:13px; font-weight:700; color:var(--gold); }
+
+/* Modal */
+.modal-overlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.75); z-index:2000;
+  display:flex; align-items:center; justify-content:center;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; padding:24px; width:90%; max-width:400px;
+}
+.modal h3 { font-size:16px; margin-bottom:12px; text-align:center; }
+.modal p { font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; line-height:1.6; }
+.modal-btns { display:flex; gap:10px; }
+.modal-btns button { flex:1; padding:12px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; border:none; }
+.btn-confirm { background:var(--neon-red); color:#fff; }
+.btn-cancel { background:rgba(255,255,255,0.08); color:var(--text-secondary); }
+
+/* Toast */
+.toast {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%);
+  background:var(--success); color:#fff; padding:10px 24px; border-radius:10px;
+  font-size:13px; font-weight:600; z-index:3000; animation: fadeIn 0.2s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+/* Node Status Panel */
+.node-panel {
+  background: linear-gradient(135deg, rgba(255,34,68,0.1), rgba(0,0,0,0.3));
+  border:1px solid rgba(255,34,68,0.2); border-radius:14px; padding:16px;
+  margin-bottom:14px; display:flex; align-items:center; gap:14px;
+}
+.node-badge-area { text-align:center; }
+.node-badge-icon {
+  width:56px; height:56px; border-radius:50%;
+  background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;
+  font-size:24px; font-weight:900; margin-bottom:4px;
+}
+.node-badge-icon.eternal { background:linear-gradient(135deg, var(--gold), #B8860B); }
+.node-badge-label { font-size:10px; color:var(--text-dim); }
+.node-details { flex:1; }
+.node-detail-row { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; }
+.node-detail-row span:first-child { color:var(--text-dim); }
+.node-detail-row span:last-child { color:var(--text-primary); font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-icon">UR</div>
+      <div class="logo-text">UR <span>Agent</span></div>
+    </div>
+    <button class="btn-wallet" id="btnWallet" onclick="connectWallet()">连接钱包</button>
+  </div>
+
+  <!-- Page 1: 首页 -->
+  <div class="page active" id="page-home">
+    <div class="price-bar">
+      <div class="price-main">
+        <div>
+          <div class="price-token"><strong>UR</strong> / USDT</div>
+          <div class="price-val" id="urPrice">$0.821</div>
+          <div class="price-change" id="urChange">+5.23%</div>
+        </div>
+      </div>
+      <div class="price-vol">
+        24h 成交量
+        <strong id="urVol24">$2.48M</strong>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-item"><div class="stat-val" id="totalSupply">86.2M</div><div class="stat-label">总供应量</div></div>
+      <div class="stat-item"><div class="stat-val cyan" id="nodeCount">12,847</div><div class="stat-label">活跃节点数</div></div>
+      <div class="stat-item"><div class="stat-val" id="totalBurn">13.8M</div><div class="stat-label">累计销毁量</div></div>
+      <div class="stat-item"><div class="stat-val cyan" id="refCount">3,420</div><div class="stat-label">推荐人数</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="switchTab('stake')">一键云托管</button>
+      <button class="btn-secondary" onclick="switchTab('earn')">一键领取收益</button>
+    </div>
+    <div class="card">
+      <div class="card-title">最新公告</div>
+      <div style="font-size:12px; color:var(--text-secondary); line-height:1.8;">
+        UR Agent V3 主网已上线，ILO 阶段圆满结束。八级动态等级系统全面激活，云算力托管现已开放。
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 2: 云托管 -->
+  <div class="page" id="page-stake">
+    <div class="card">
+      <div class="card-title">托管余额</div>
+      <div style="font-size:28px; font-weight:900; color:var(--gold);" id="stakedBalance">15,000.00 UR</div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">等效 ≈ <span id="stakedUSD">$12,315.00</span> USD</div>
+    </div>
+    <div class="card">
+      <div class="card-title">云托管</div>
+      <div class="input-group">
+        <label>托管 UR 数量</label>
+        <div class="input-row">
+          <input class="input-field" id="stakeAmount" type="number" placeholder="输入 UR 数量" value="1000">
+          <span class="input-suffix">UR</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="doStake()">一键托管</button>
+    </div>
+    <div class="node-panel">
+      <div class="node-badge-area">
+        <div class="node-badge-icon" id="nodeBadgeIcon">V3</div>
+        <div class="node-badge-label" id="nodeBadgeLabel">Node V3</div>
+      </div>
+      <div class="node-details">
+        <div class="node-detail-row"><span>等效托管量</span><span id="nodeEquivalent">$12,315</span></div>
+        <div class="node-detail-row"><span>伞下持有</span><span id="nodeDownline">$185,200</span></div>
+        <div class="node-detail-row"><span>伞下V6数</span><span id="nodeV6Count">0</span></div>
+        <div class="node-detail-row"><span>收益系数</span><span id="nodeCoeff" style="color:var(--gold);">55%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">八级等级进度</div>
+      <div class="tier-steps" id="tierSteps"></div>
+      <div class="progress-section">
+        <div class="progress-label"><span>下一级: <span id="nextTierName">V4</span></div>
+        <div class="progress-label"><span>个人持有进度</span><span id="tierPersonalProgress">$3,000 / $6,000</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="tierPersonalBar" style="width:50%"></div></div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-label"><span>伞下持有进度</span><span id="tierDownlineProgress">$185K / $300K</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="tierDownlineBar" style="width:62%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">托管记录</div>
+      <div class="record-list" id="stakeRecords"></div>
+    </div>
+  </div>
+
+  <!-- Page 3: 收益 -->
+  <div class="page" id="page-earn">
+    <div class="card" style="background:linear-gradient(135deg, rgba(255,34,68,0.12), rgba(255,204,68,0.06)); border-color:rgba(255,34,68,0.3);">
+      <div class="card-title">总收益概览</div>
+      <div style="display:flex; gap:20px;">
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:12px; color:var(--text-dim);">待领取</div>
+          <div style="font-size:26px; font-weight:900; color:var(--gold);" id="pendingReward">3,420.56 UR</div>
+          <div style="font-size:10px; color:var(--text-dim);">≈ $2,808.28</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:12px; color:var(--text-dim);">累计收益</div>
+          <div style="font-size:26px; font-weight:900; color:var(--cyan);" id="totalEarned">28,150.20 UR</div>
+          <div style="font-size:10px; color:var(--text-dim);">≈ $23,111.31</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%; margin-top:14px; font-size:16px;" onclick="doClaimAll()">一键领取全部收益</button>
+    </div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchEarnSub(0)">节点分红</button>
+      <button class="sub-tab" onclick="switchEarnSub(1)">等级日奖励</button>
+    </div>
+    <div class="card" id="earnDetailCard">
+      <div id="earnDividendDetail">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">分红来源</span><span style="color:var(--text-dim);">3% 交易税池</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">托管份额</span><span style="color:var(--text-primary); font-weight:600;">15,000 / 8,500,000 UR</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">待领分红</span><span style="color:var(--gold); font-weight:700;">2,845.30 UR</span>
+        </div>
+      </div>
+      <div id="earnDailyDetail" style="display:none;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">奖励来源</span><span style="color:var(--text-dim);">伞下新增业绩 × 系数</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">当前系数</span><span style="color:var(--gold); font-weight:700;">55%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">今日日均新增</span><span style="color:var(--text-primary); font-weight:600;">$620.00</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);">待领日奖励</span><span style="color:var(--gold); font-weight:700;">575.26 UR</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">收益历史</div>
+      <div class="record-list" id="earnRecords"></div>
+    </div>
+  </div>
+
+  <!-- Page 4: 数据分析 -->
+  <div class="page" id="page-data">
+    <div class="kpi-row">
+      <div class="kpi-item"><div class="kpi-val">$2.48M</div><div class="kpi-label">24h 交易量</div></div>
+      <div class="kpi-item"><div class="kpi-val">+8.3%</div><div class="kpi-label">节点增长率</div></div>
+      <div class="kpi-item"><div class="kpi-val">$45.2K</div><div class="kpi-label">伞下新增业绩</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">价格走势（TWAP 预言机）</div>
+      <div class="placeholder-chart" id="priceChart">
+        <svg viewBox="0 0 480 160"><polyline fill="none" stroke="#FF2244" stroke-width="2" points="0,120 40,110 80,90 120,95 160,70 200,75 240,50 280,55 320,35 360,45 400,20 440,30 480,15"/><polyline fill="none" stroke="#00CCFF" stroke-width="1.5" stroke-dasharray="4" points="0,130 40,120 80,105 120,100 160,80 200,85 240,60 280,65 320,45 360,50 400,30 440,35 480,20"/></svg>
+        <div>UR/USDT 7日价格曲线（模拟） | TWAP 预言机接入预留</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">销毁曲线</div>
+      <div class="placeholder-chart" style="height:160px;">
+        <svg viewBox="0 0 480 160"><polyline fill="none" stroke="#FFCC44" stroke-width="2" points="0,130 20,128 40,124 60,118 80,110 100,102 120,92 140,80 160,68 180,55 200,42 220,28 240,15"/><rect x="0" y="15" width="480" height="145" fill="rgba(255,204,68,0.06)"/></svg>
+        <div>累计销毁 13.8M UR | 日均销毁 0.5%</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Page 5: 社群 -->
+  <div class="page" id="page-social">
+    <div class="social-card" onclick="window.open('https://t.me/uragent01','_blank')">
+      <div class="social-icon">💬</div>
+      <div class="social-name">Telegram 官方社群</div>
+      <div class="social-link">https://t.me/uragent01</div>
+      <div style="font-size:10px; color:var(--success); margin-top:6px;">点击立即加入</div>
+    </div>
+    <div class="social-links">
+      <div class="social-link-item" onclick="showToast('即将上线')"><div class="icon">🐦</div><div class="name">Twitter / X</div><div class="status">即将上线</div></div>
+      <div class="social-link-item" onclick="showToast('即将上线')"><div class="icon">🎮</div><div class="name">Discord</div><div class="status">即将上线</div></div>
+      <div class="social-link-item" onclick="showToast('即将上线')"><div class="icon">📝</div><div class="name">Medium</div><div class="status">即将上线</div></div>
+      <div class="social-link-item" onclick="showToast('即将上线')"><div class="icon">📺</div><div class="name">YouTube</div><div class="status">即将上线</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">我的推荐</div>
+      <div id="bindReferrer">
+        <div class="input-group">
+          <label>绑定推荐人（首次绑定后不可更改）</label>
+          <div class="input-row">
+            <input class="input-field" id="inviterCode" type="text" placeholder="输入推荐人的邀请码">
+            <button class="btn-primary" style="width:auto; padding:12px 20px; white-space:nowrap;" onclick="bindReferrer()">绑定</button>
+          </div>
+        </div>
+      </div>
+      <div id="myReferral" style="display:none;">
+        <div style="background:rgba(255,204,68,0.08); border:1px solid rgba(255,204,68,0.2); border-radius:10px; padding:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--text-dim);">我的邀请链接</span>
+            <button class="btn-wallet" style="font-size:10px; padding:4px 10px;" onclick="copyRefLink()">复制</button>
+          </div>
+          <div style="font-size:13px; color:var(--cyan); word-break:break-all; margin-top:6px;" id="myRefLink">--</div>
+          <div style="font-size:10px; color:var(--text-dim); margin-top:4px;">邀请码: <span id="myRefCode" style="color:var(--gold);">--</span></div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <div style="flex:1; text-align:center; background:rgba(255,34,68,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--neon-red);" id="downlineL1">0</div>
+            <div style="font-size:10px; color:var(--text-dim);">L1 直推</div>
+          </div>
+          <div style="flex:1; text-align:center; background:rgba(255,204,68,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--gold);" id="downlineL2">0</div>
+            <div style="font-size:10px; color:var(--text-dim);">L2 间推</div>
+          </div>
+          <div style="flex:1; text-align:center; background:rgba(0,204,255,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--cyan);" id="downlineL3">0</div>
+            <div style="font-size:10px; color:var(--text-dim);">L3 间推</div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:8px; font-size:10px; color:var(--text-dim);">
+          伞下总推荐: <span id="totalDownline" style="color:var(--gold); font-weight:700;">0</span> 人
+          &nbsp;|&nbsp; 推荐人: <span id="boundReferrer" style="color:var(--cyan);">--</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">推荐排行榜</div>
+      <div class="rank-list" id="rankList"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" onclick="switchTab('home')" data-tab="home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      首页
+    </button>
+    <button class="nav-tab" onclick="switchTab('stake')" data-tab="stake">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      云托管
+    </button>
+    <button class="nav-tab" onclick="switchTab('earn')" data-tab="earn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      收益
+    </button>
+    <button class="nav-tab" onclick="switchTab('data')" data-tab="data">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      数据
+    </button>
+    <button class="nav-tab" onclick="switchTab('social')" data-tab="social">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      社群
+    </button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ============ State ============
+const state = {
+  wallet: null,
+  urPrice: 0.821,
+  urChange: 5.23,
+  urVol24: 2480000,
+  totalSupply: 86200000,
+  nodeCount: 12847,
+  totalBurn: 13800000,
+  refCount: 0,
+  stakedBalance: 15000,
+  currentTier: 3,
+  pendingReward: 3420.56,
+  totalEarned: 28150.20,
+  coefficient: 55,
+  inviterCode: '',
+  myRefCode: '',
+  myRefLink: '',
+  downlineL1: 0,
+  downlineL2: 0,
+  downlineL3: 0,
+  totalDownlineCount: 0,
+};
+
+// Tier config
+const tiers = [
+  { name: 'V1', personal: 500, downline: 20000, v6: 0 },
+  { name: 'V2', personal: 1500, downline: 60000, v6: 0 },
+  { name: 'V3', personal: 3000, downline: 150000, v6: 0 },
+  { name: 'V4', personal: 6000, downline: 300000, v6: 0 },
+  { name: 'V5', personal: 8000, downline: 600000, v6: 0 },
+  { name: 'V6', personal: 15000, downline: 1200000, v6: 0 },
+  { name: '永恒V1', personal: 30000, downline: 3000000, v6: 1 },
+  { name: '永恒V2', personal: 60000, downline: 10000000, v6: 3 },
+];
+
+// ============ Init ============
+function init() {
+  updateAllStats();
+  renderTierSteps();
+  renderStakeRecords();
+  renderEarnRecords();
+  renderRankList();
+  // If already bound, show referral info
+  if (state.myRefCode) {
+    document.getElementById('bindReferrer').style.display = 'none';
+    document.getElementById('myReferral').style.display = 'block';
+    document.getElementById('myRefLink').textContent = state.myRefLink;
+    document.getElementById('myRefCode').textContent = state.myRefCode;
+    document.getElementById('boundReferrer').textContent = state.inviterCode;
+    updateDownlineStats();
+  }
+}
+
+// ============ Navigation ============
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + tab);
+  if (page) page.classList.add('active');
+  const navBtn = document.querySelector(`[data-tab="${tab}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  if (tab === 'stake') updateTierDisplay();
+}
+
+// ============ Wallet ============
+function connectWallet() {
+  if (state.wallet) {
+    state.wallet = null;
+    document.getElementById('btnWallet').textContent = '连接钱包';
+    document.getElementById('btnWallet').classList.remove('connected');
+    return;
+  }
+  // Simulate connection
+  state.wallet = '0x' + Math.random().toString(16).slice(2, 10) + '...' + Math.random().toString(16).slice(2, 6);
+  document.getElementById('btnWallet').textContent = state.wallet;
+  document.getElementById('btnWallet').classList.add('connected');
+}
+
+// ============ Staking Modal ============
+function doStake() {
+  const amount = document.getElementById('stakeAmount').value;
+  if (!amount || parseFloat(amount) <= 0) { showToast('请输入有效的UR数量'); return; }
+  showModal(
+    '确认云托管',
+    `<p>您即将托管 <strong style="color:#FFCC44;">${amount} UR</strong> 到云算力合约。</p>
+     <p style="font-size:11px; color:#706060;">合约地址: 0x0ADAaF43...202b21211<br>托管后将自动获得节点分红资格。</p>`,
+    () => {
+      state.stakedBalance += parseFloat(amount);
+      updateAllStats();
+      updateTierDisplay();
+      renderStakeRecords();
+      hideModal();
+      showToast(`成功托管 ${amount} UR！`);
+    }
+  );
+}
+
+// ============ Claim Modal ============
+function doClaimAll() {
+  if (state.pendingReward <= 0) { showToast('暂无待领取收益'); return; }
+  showModal(
+    '确认领取收益',
+    `<p>您即将领取 <strong style="color:#FFCC44;">${state.pendingReward.toFixed(2)} UR</strong></p>
+     <p style="font-size:11px; color:#706060;">含节点分红 + 等级日奖励<br>领取后将转入您的钱包地址。</p>`,
+    () => {
+      state.totalEarned += state.pendingReward;
+      const claimed = state.pendingReward;
+      state.pendingReward = 0;
+      updateAllStats();
+      renderEarnRecords();
+      hideModal();
+      showToast(`成功领取 ${claimed.toFixed(2)} UR！`);
+    }
+  );
+}
+
+// ============ Modal Helpers ============
+function showModal(title, body, onConfirm) {
+  document.getElementById('modalContent').innerHTML = `
+    <h3>${title}</h3>
+    ${body}
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideModal()">取消</button>
+      <button class="btn-confirm" id="modalConfirmBtn">确认</button>
+    </div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  document.getElementById('modalConfirmBtn').onclick = onConfirm;
+}
+function hideModal() {
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) hideModal();
+});
+
+// ============ Toast ============
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ============ Stats Update ============
+function updateAllStats() {
+  document.getElementById('urPrice').textContent = '$' + state.urPrice.toFixed(3);
+  document.getElementById('urChange').textContent = (state.urChange > 0 ? '+' : '') + state.urChange.toFixed(2) + '%';
+  document.getElementById('urChange').style.color = state.urChange >= 0 ? 'var(--success)' : 'var(--neon-red)';
+  document.getElementById('urVol24').textContent = '$' + (state.urVol24 / 1e6).toFixed(2) + 'M';
+  document.getElementById('totalSupply').textContent = (state.totalSupply / 1e6).toFixed(1) + 'M';
+  document.getElementById('nodeCount').textContent = state.nodeCount.toLocaleString();
+  document.getElementById('totalBurn').textContent = (state.totalBurn / 1e6).toFixed(1) + 'M';
+  document.getElementById('refCount').textContent = state.refCount.toLocaleString();
+  document.getElementById('stakedBalance').textContent = state.stakedBalance.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  const usdVal = (state.stakedBalance * state.urPrice).toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('stakedUSD').textContent = '$' + usdVal;
+  document.getElementById('pendingReward').textContent = state.pendingReward.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  document.getElementById('totalEarned').textContent = state.totalEarned.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  updateTierDisplay();
+}
+
+// ============ Tier Display ============
+function updateTierDisplay() {
+  const t = tiers[state.currentTier - 1];
+  const isEternal = state.currentTier >= 7;
+  document.getElementById('nodeBadgeIcon').textContent = t.name;
+  document.getElementById('nodeBadgeIcon').className = 'node-badge-icon' + (isEternal ? ' eternal' : '');
+  document.getElementById('nodeBadgeLabel').textContent = 'Node ' + t.name;
+
+  const stakedUSD = state.stakedBalance * state.urPrice;
+  document.getElementById('nodeEquivalent').textContent = '$' + stakedUSD.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('nodeDownline').textContent = '$' + (t.downline * 0.9).toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('nodeV6Count').textContent = state.currentTier >= 7 ? (state.currentTier === 7 ? '1' : '4') : '0';
+  document.getElementById('nodeCoeff').textContent = state.coefficient + '%';
+
+  // Next tier progress
+  if (state.currentTier < 8) {
+    const next = tiers[state.currentTier];
+    document.getElementById('nextTierName').textContent = next.name;
+    const personalPct = Math.min(100, (stakedUSD / next.personal) * 100);
+    const downlinePct = Math.min(100, ((t.downline * 0.9) / next.downline) * 100);
+    document.getElementById('tierPersonalProgress').textContent = '$' + stakedUSD.toLocaleString('en-US', {maximumFractionDigits:0}) + ' / $' + next.personal.toLocaleString();
+    document.getElementById('tierDownlineProgress').textContent = '$' + (t.downline * 0.9).toLocaleString('en-US', {maximumFractionDigits:0}) + ' / $' + next.downline.toLocaleString();
+    document.getElementById('tierPersonalBar').style.width = personalPct + '%';
+    document.getElementById('tierDownlineBar').style.width = downlinePct + '%';
+  } else {
+    document.getElementById('nextTierName').textContent = '已满级';
+    document.getElementById('tierPersonalProgress').textContent = '已达标';
+    document.getElementById('tierDownlineProgress').textContent = '已达标';
+    document.getElementById('tierPersonalBar').style.width = '100%';
+    document.getElementById('tierDownlineBar').style.width = '100%';
+  }
+}
+
+function renderTierSteps() {
+  const container = document.getElementById('tierSteps');
+  let html = '';
+  tiers.forEach((t, i) => {
+    let cls = 'tier-step';
+    if (i < state.currentTier) cls += ' done';
+    else if (i === state.currentTier) cls += ' current';
+    if (i >= 6) cls += ' eternal';
+    html += `<div class="${cls}">${t.name.replace('永恒','E')}</div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ============ Records ============
+function renderStakeRecords() {
+  const records = [
+    { type: '云托管', time: '2026-07-18 14:30', amount: '+2,000.00 UR', cls: 'positive' },
+    { type: '云托管', time: '2026-07-15 09:15', amount: '+5,000.00 UR', cls: 'positive' },
+    { type: '云托管', time: '2026-07-10 16:45', amount: '+8,000.00 UR', cls: 'positive' },
+    { type: '节点分红', time: '2026-07-17 00:00', amount: '+320.50 UR', cls: 'positive' },
+    { type: '等级日奖励', time: '2026-07-17 00:00', amount: '+185.20 UR', cls: 'positive' },
+  ];
+  document.getElementById('stakeRecords').innerHTML = records.map(r => `
+    <div class="record-item">
+      <div class="record-left"><div class="record-type">${r.type}</div><div class="record-time">${r.time}</div></div>
+      <div class="record-right"><div class="record-amount ${r.cls}">${r.amount}</div></div>
+    </div>`).join('');
+}
+
+function renderEarnRecords() {
+  const records = [
+    { type: '节点分红', time: '2026-07-18', amount: '+310.80 UR', cls: 'positive' },
+    { type: '等级日奖励', time: '2026-07-18', amount: '+175.40 UR', cls: 'positive' },
+    { type: '节点分红', time: '2026-07-17', amount: '+320.50 UR', cls: 'positive' },
+    { type: '等级日奖励', time: '2026-07-17', amount: '+185.20 UR', cls: 'positive' },
+    { type: '节点分红', time: '2026-07-16', amount: '+298.30 UR', cls: 'positive' },
+    { type: '领取收益', time: '2026-07-15', amount: '-2,500.00 UR', cls: 'negative' },
+  ];
+  document.getElementById('earnRecords').innerHTML = records.map(r => `
+    <div class="record-item">
+      <div class="record-left"><div class="record-type">${r.type}</div><div class="record-time">${r.time}</div></div>
+      <div class="record-right"><div class="record-amount ${r.cls}">${r.amount}</div></div>
+    </div>`).join('');
+}
+
+// ============ Earn Sub Tabs ============
+function switchEarnSub(idx) {
+  document.querySelectorAll('.sub-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.getElementById('earnDividendDetail').style.display = idx === 0 ? 'block' : 'none';
+  document.getElementById('earnDailyDetail').style.display = idx === 1 ? 'block' : 'none';
+}
+
+// ============ Social ============
+// ============ Referral System ============
+function bindReferrer() {
+  const code = document.getElementById('inviterCode').value.trim();
+  if (!code) { showToast('请输入推荐人邀请码'); return; }
+  showModal(
+    '确认绑定推荐人',
+    `<p>您即将绑定推荐人 <strong style="color:#FFCC44;">${code}</strong></p>
+     <p style="font-size:11px; color:#706060;">绑定后不可更改，推荐关系将写入链上。<br>确认后将自动生成您的专属邀请链接。</p>`,
+    () => {
+      state.inviterCode = code;
+      state.myRefCode = 'UR' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      state.myRefLink = `https://ur.agent/ref?code=${state.myRefCode}`;
+      state.downlineL1 = Math.floor(Math.random() * 8) + 3;
+      state.downlineL2 = Math.floor(Math.random() * 50) + 20;
+      state.downlineL3 = Math.floor(Math.random() * 200) + 100;
+      document.getElementById('bindReferrer').style.display = 'none';
+      document.getElementById('myReferral').style.display = 'block';
+      document.getElementById('myRefLink').textContent = state.myRefLink;
+      document.getElementById('myRefCode').textContent = state.myRefCode;
+      document.getElementById('boundReferrer').textContent = state.inviterCode;
+      updateDownlineStats();
+      state.totalDownlineCount = state.downlineL1 + state.downlineL2 + state.downlineL3;
+      document.getElementById('totalDownline').textContent = state.totalDownlineCount.toLocaleString();
+      document.getElementById('refCount').textContent = state.totalDownlineCount.toLocaleString();
+      hideModal();
+      showToast('推荐关系绑定成功！邀请链接已生成');
+    }
+  );
+}
+
+function updateDownlineStats() {
+  document.getElementById('downlineL1').textContent = state.downlineL1;
+  document.getElementById('downlineL2').textContent = state.downlineL2;
+  document.getElementById('downlineL3').textContent = state.downlineL3;
+  state.totalDownlineCount = state.downlineL1 + state.downlineL2 + state.downlineL3;
+  document.getElementById('totalDownline').textContent = state.totalDownlineCount.toLocaleString();
+}
+
+function copyRefLink() {
+  navigator.clipboard.writeText(state.myRefLink).then(() => {
+    showToast('邀请链接已复制到剪贴板');
+  }).catch(() => {
+    showToast('复制失败，请手动复制');
+  });
+}
+
+function renderRankList() {
+  const ranks = [
+    { name: 'CryptoWhale', addr: '0x9a3b...7f2e', value: '48,520 UR' },
+    { name: 'NodeMaster', addr: '0x4c1d...a8b3', value: '36,140 UR' },
+    { name: 'URBuilder', addr: '0x7e5f...2c91', value: '29,870 UR' },
+    { name: 'CloudKing', addr: '0x2b8a...d4f6', value: '22,300 UR' },
+    { name: 'Agent007', addr: '0xf1c3...6e0a', value: '18,450 UR' },
+  ];
+  document.getElementById('rankList').innerHTML = ranks.map((r, i) => {
+    let cls = 'rank-num';
+    if (i === 0) cls += ' top1';
+    else if (i === 1) cls += ' top2';
+    else if (i === 2) cls += ' top3';
+    return `<div class="rank-item">
+      <div class="${cls}">${i + 1}</div>
+      <div class="rank-info"><div class="rank-name">${r.name}</div><div class="rank-addr">${r.addr}</div></div>
+      <div class="rank-value">${r.value}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ Start ============
+init();
+</script>
+</body>
+</html>
