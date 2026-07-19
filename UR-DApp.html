@@ -1,0 +1,2889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>UR Agent - AI × Web3 × Cloud Power</title>
+<style>
+:root {
+  --bg-deep: #0C0000;
+  --card-bg: rgba(26,5,5,0.85);
+  --neon-red: #FF2244;
+  --gold: #FFCC44;
+  --cyan: #00CCFF;
+  --text-primary: #F0E0E0;
+  --text-secondary: #A09090;
+  --text-dim: #706060;
+  --border: #2A1515;
+  --success: #22CC66;
+  --white: #FFFFFF;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: transparent; }
+body { height:100%; font-family: inherit; background: transparent; color: var(--text-primary); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+
+/* Canvas Background */
+#bgCanvas {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: -1; pointer-events: none;
+}
+.app { position: relative; }
+
+.app { max-width:480px; margin:0 auto; min-height:100vh; padding-bottom:80px; position:relative; }
+
+/* Header */
+.header {
+  padding: 16px 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo-area { display:flex; align-items:center; gap:10px; }
+.logo-icon {
+  width:40px; height:40px; border-radius:10px;
+  background: linear-gradient(135deg, var(--neon-red), #CC1133);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:900; color:#fff;
+}
+.logo-text { font-size:18px; font-weight:800; color:var(--text-primary); letter-spacing:0.5px; }
+.logo-text span { color:var(--neon-red); }
+
+.btn-wallet {
+  background: linear-gradient(135deg, var(--gold), #E6A800);
+  border:none; color:#1A0505; padding:8px 14px; border-radius:8px;
+  font-size:12px; font-weight:700; cursor:pointer;
+  transition: all 0.2s;
+}
+.btn-wallet:hover { transform:scale(1.03); opacity:0.9; }
+.btn-wallet.connected { background: var(--success); color:#fff; font-size:11px; }
+
+/* Navigator Tabs */
+.nav-tabs {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background: rgba(12,0,0,0.96); backdrop-filter:blur(12px);
+  border-top: 1px solid var(--border);
+  display:flex; z-index:1000;
+}
+.nav-tab {
+  flex:1; padding:10px 2px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  border:none; background:none; cursor:pointer;
+  color:var(--text-dim);
+  font-size:9px; font-weight:600;
+  transition: color 0.2s;
+}
+.nav-tab.active { color:var(--gold); }
+.nav-tab svg { width:18px; height:18px; fill:currentColor; }
+
+/* Page */
+.page { display:none; padding:0 16px; animation: fadeIn 0.25s ease; }
+.page.active { display:block; }
+
+@keyframes fadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+/* Price Bar */
+.price-bar {
+  background: linear-gradient(135deg, rgba(255,34,68,0.15), rgba(0,204,255,0.10));
+  border:1px solid rgba(255,34,68,0.25);
+  border-radius:12px; padding:14px; margin-bottom:16px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.price-main { display:flex; align-items:center; gap:10px; }
+.price-token { font-size:11px; color:var(--text-secondary); }
+.price-token strong { color:var(--neon-red); font-size:13px; }
+.price-val { font-size:24px; font-weight:900; color:var(--gold); }
+.price-change { font-size:12px; font-weight:700; color:var(--success); }
+.price-vol { text-align:right; font-size:10px; color:var(--text-dim); }
+.price-vol strong { color:var(--cyan); display:block; font-size:15px; }
+
+/* Cards */
+.card {
+  background: var(--card-bg); border:1px solid var(--border);
+  border-radius:14px; padding:16px; margin-bottom:14px;
+}
+.card-title {
+  font-size:13px; font-weight:700; color:var(--text-secondary);
+  margin-bottom:12px; display:flex; align-items:center; gap:6px;
+}
+.card-title::before {
+  content:''; width:3px; height:16px; border-radius:2px;
+  background: var(--neon-red); display:inline-block;
+}
+
+/* Stat Grid */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-item {
+  background: rgba(255,34,68,0.06);
+  border:1px solid rgba(255,204,68,0.10);
+  border-radius:10px; padding:12px; text-align:center;
+}
+.stat-val { font-size:20px; font-weight:900; color:var(--gold); }
+.stat-val.cyan { color:var(--cyan); }
+.stat-label { font-size:10px; color:var(--text-dim); margin-top:3px; }
+
+/* Buttons */
+.btn-row { display:flex; gap:10px; margin-bottom:14px; }
+.btn-primary {
+  flex:1; padding:12px; border:none; border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  background: linear-gradient(135deg, var(--neon-red), #CC1133);
+  color:#fff; transition: all 0.2s;
+}
+.btn-primary:hover { transform:scale(1.02); box-shadow: 0 0 20px rgba(255,34,68,0.3); }
+.btn-secondary {
+  flex:1; padding:12px; border:1px solid var(--gold); border-radius:10px;
+  font-size:14px; font-weight:700; cursor:pointer;
+  background: transparent; color:var(--gold); transition: all 0.2s;
+}
+.btn-secondary:hover { background:rgba(255,204,68,0.08); }
+
+/* Input */
+.input-group { margin-bottom:12px; }
+.input-group label { font-size:11px; color:var(--text-secondary); display:block; margin-bottom:6px; }
+.input-row { display:flex; gap:8px; }
+.input-field {
+  flex:1; padding:12px 14px; border-radius:10px;
+  background: rgba(12,0,0,0.6); border:1px solid var(--border);
+  color:var(--text-primary); font-size:15px; outline:none;
+  transition: border 0.2s;
+}
+.input-field:focus { border-color: var(--neon-red); }
+.input-suffix { font-size:11px; color:var(--text-dim); padding-top:12px; }
+
+/* Tier Badge */
+.tier-badge {
+  display:inline-block; padding:4px 12px; border-radius:6px;
+  font-size:12px; font-weight:800; letter-spacing:0.5px;
+}
+.tier-v1 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v2 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v3 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v4 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v5 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-v6 { background:rgba(255,255,255,0.12); color:#FFFFFF; }
+.tier-eternal { background:linear-gradient(135deg, var(--gold), #D49000); color:#1A0505; }
+
+/* Progress */
+.progress-section { margin-bottom:12px; }
+.progress-label { display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; }
+.progress-label span:first-child { color:var(--text-secondary); }
+.progress-label span:last-child { color:var(--gold); }
+.progress-bar {
+  width:100%; height:6px; background:rgba(255,255,255,0.08);
+  border-radius:3px; overflow:hidden;
+}
+.progress-fill {
+  height:100%; border-radius:3px;
+  background: linear-gradient(90deg, var(--neon-red), var(--gold));
+  transition: width 0.5s ease;
+}
+
+/* Tier Steps */
+.tier-steps { display:flex; justify-content:space-between; margin:12px 0; }
+.tier-step {
+  width:30px; height:30px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:800;
+  background:rgba(255,255,255,0.06); color:var(--text-dim);
+  border:1px solid transparent;
+}
+.tier-step.done { background:var(--neon-red); color:#fff; border-color:var(--neon-red); }
+.tier-step.current { background:transparent; color:var(--gold); border:2px solid var(--gold); }
+.tier-step.eternal { background:linear-gradient(135deg, rgba(255,204,68,0.2), transparent); color:var(--gold); border:1px solid var(--gold); }
+
+/* Record List */
+.record-list { max-height:260px; overflow-y:auto; }
+.record-item {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:12px;
+}
+.record-item:last-child { border-bottom:none; }
+.record-left { display:flex; flex-direction:column; gap:2px; }
+.record-type { color:var(--text-primary); font-weight:600; }
+.record-time { color:var(--text-dim); font-size:10px; }
+.record-right { text-align:right; }
+.record-amount { font-weight:700; }
+.record-amount.positive { color:var(--success); }
+.record-amount.negative { color:var(--neon-red); }
+.record-status { font-size:10px; color:var(--text-dim); }
+
+/* Sub Tabs */
+.sub-tabs { display:flex; gap:0; margin-bottom:14px; }
+.sub-tab {
+  flex:1; padding:8px; text-align:center; border:none; cursor:pointer;
+  font-size:12px; font-weight:600; color:var(--text-dim);
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--border);
+  transition: all 0.2s;
+}
+.sub-tab:first-child { border-radius:8px 0 0 8px; }
+.sub-tab:last-child { border-radius:0 8px 8px 0; }
+.sub-tab.active { background:rgba(255,204,68,0.10); color:var(--gold); border-color:var(--gold); }
+
+/* Analytics */
+.placeholder-chart {
+  width:100%; height:180px; border-radius:12px;
+  background:rgba(255,255,255,0.03); border:1px dashed var(--border);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--text-dim); font-size:12px; gap:6px; margin-bottom:14px;
+}
+.placeholder-chart svg { width:36px; height:36px; fill:var(--text-dim); }
+
+.kpi-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+.kpi-item {
+  background:rgba(0,204,255,0.05); border:1px solid rgba(0,204,255,0.12);
+  border-radius:10px; padding:12px; text-align:center;
+}
+.kpi-val { font-size:16px; font-weight:800; color:var(--cyan); }
+.kpi-label { font-size:9px; color:var(--text-dim); margin-top:3px; }
+
+/* Social */
+.social-card {
+  background: linear-gradient(135deg, rgba(0,136,204,0.15), rgba(0,204,255,0.08));
+  border:1px solid rgba(0,204,255,0.2); border-radius:14px; padding:20px;
+  text-align:center; margin-bottom:14px; cursor:pointer; transition: all 0.2s;
+}
+.social-card:hover { transform:scale(1.02); }
+.social-icon { font-size:36px; margin-bottom:8px; }
+.social-name { font-size:16px; font-weight:800; color:var(--cyan); margin-bottom:4px; }
+.social-link { font-size:11px; color:var(--text-dim); word-break:break-all; }
+
+.social-links { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.social-link-item {
+  background:var(--card-bg); border:1px solid var(--border); border-radius:10px;
+  padding:14px; text-align:center; cursor:pointer; transition: all 0.2s;
+}
+.social-link-item:hover { border-color:var(--cyan); }
+.social-link-item .icon { font-size:24px; margin-bottom:4px; }
+.social-link-item .name { font-size:12px; font-weight:600; color:var(--text-primary); }
+.social-link-item .status { font-size:9px; color:var(--text-dim); }
+
+.ref-generator { margin-bottom:14px; }
+.ref-output {
+  margin-top:8px; padding:12px; border-radius:10px;
+  background:rgba(0,204,255,0.06); border:1px solid rgba(0,204,255,0.15);
+  font-size:11px; color:var(--cyan); word-break:break-all; display:none;
+}
+
+.rank-list { }
+.rank-item {
+  display:flex; align-items:center; gap:10px; padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.rank-num { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; background:rgba(255,255,255,0.08); color:var(--text-dim); }
+.rank-num.top1 { background:var(--gold); color:#1A0505; }
+.rank-num.top2 { background:rgba(255,204,68,0.4); color:var(--gold); }
+.rank-num.top3 { background:rgba(255,204,68,0.25); color:var(--gold); }
+.rank-info { flex:1; }
+.rank-name { font-size:13px; font-weight:600; }
+.rank-addr { font-size:10px; color:var(--text-dim); }
+.rank-value { font-size:13px; font-weight:700; color:var(--gold); }
+
+/* Modal */
+.modal-overlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.75); z-index:2000;
+  display:flex; align-items:center; justify-content:center;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; padding:24px; width:90%; max-width:400px;
+}
+.modal h3 { font-size:16px; margin-bottom:12px; text-align:center; }
+.modal p { font-size:12px; color:var(--text-secondary); text-align:center; margin-bottom:16px; line-height:1.6; }
+.modal-btns { display:flex; gap:10px; }
+.modal-btns button { flex:1; padding:12px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; border:none; }
+.btn-confirm { background:var(--neon-red); color:#fff; }
+.btn-cancel { background:rgba(255,255,255,0.08); color:var(--text-secondary); }
+
+/* Toast */
+.toast {
+  position:fixed; top:20px; left:50%; transform:translateX(-50%);
+  background:var(--success); color:#fff; padding:10px 24px; border-radius:10px;
+  font-size:13px; font-weight:600; z-index:3000; animation: fadeIn 0.2s ease;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+/* Node Status Panel */
+.node-panel {
+  background: linear-gradient(135deg, rgba(255,34,68,0.1), rgba(0,0,0,0.3));
+  border:1px solid rgba(255,34,68,0.2); border-radius:14px; padding:16px;
+  margin-bottom:14px; display:flex; align-items:center; gap:14px;
+}
+.node-badge-area { text-align:center; }
+.node-badge-icon {
+  width:56px; height:56px; border-radius:50%;
+  background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;
+  font-size:24px; font-weight:900; margin-bottom:4px;
+}
+.node-badge-icon.eternal { background:linear-gradient(135deg, var(--gold), #B8860B); }
+.node-badge-label { font-size:10px; color:var(--text-dim); }
+.node-details { flex:1; }
+.node-detail-row { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; }
+.node-detail-row span:first-child { color:var(--text-dim); }
+.node-detail-row span:last-child { color:var(--text-primary); font-weight:600; }
+
+/* ILO 共筑 */
+.ilo-card {
+  background: linear-gradient(135deg, rgba(255,204,68,0.12), rgba(255,34,68,0.08));
+  border:1px solid rgba(255,204,68,0.25); border-radius:14px; padding:16px; margin-bottom:14px;
+}
+.ilo-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.ilo-title { font-size:15px; font-weight:800; color:var(--gold); }
+.ilo-badge {
+  font-size:10px; padding:4px 10px; border-radius:6px; font-weight:700;
+  background:rgba(34,204,102,0.15); color:var(--success); border:1px solid rgba(34,204,102,0.3);
+}
+.ilo-progress { margin-bottom:12px; }
+.ilo-stats { display:flex; justify-content:space-between; font-size:11px; margin-top:4px; }
+.ilo-stats span:first-child { color:var(--text-dim); }
+.ilo-stats span:last-child { color:var(--text-primary); font-weight:600; }
+.ilo-input-row { display:flex; gap:8px; margin-bottom:10px; align-items:flex-end; }
+.ilo-input-row .input-group { flex:1; margin-bottom:0; }
+.ilo-btns { display:flex; gap:8px; }
+.ilo-btns button { flex:1; padding:12px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all 0.2s; }
+.btn-approve { background:rgba(255,204,68,0.15); color:var(--gold); border:1px solid var(--gold); }
+.btn-approve:hover { background:rgba(255,204,68,0.25); }
+.btn-approve:disabled { opacity:0.4; cursor:not-allowed; }
+.btn-participate { background:linear-gradient(135deg, var(--gold), #D49000); color:#1A0505; }
+.btn-participate:hover { box-shadow:0 0 20px rgba(255,204,68,0.3); }
+.btn-participate:disabled { opacity:0.4; cursor:not-allowed; }
+.ilo-my-contribution { 
+  font-size:11px; color:var(--text-dim); margin-top:8px; text-align:center;
+  padding-top:8px; border-top:1px solid rgba(255,255,255,0.06);
+}
+.ilo-my-contribution strong { color:var(--gold); }
+/* Invite Friend Card */
+.invite-card {
+  background: linear-gradient(135deg, rgba(0,204,255,0.06), rgba(102,51,255,0.06));
+  border: 1px solid rgba(0,204,255,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.invite-card .invite-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.invite-card .invite-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.invite-card .invite-link-text {
+  flex: 1;
+  font-size: 11px;
+  color: var(--cyan);
+  word-break: break-all;
+  line-height: 1.4;
+  font-family: 'Courier New', monospace;
+}
+.invite-card .btn-copy-link {
+  flex-shrink: 0;
+  background: rgba(0,204,255,0.15);
+  border: 1px solid var(--cyan);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--cyan);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.invite-card .btn-copy-link:hover {
+  background: rgba(0,204,255,0.25);
+  box-shadow: 0 0 12px rgba(0,204,255,0.2);
+}
+.invite-card .invite-hint {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+/* Language Switcher */
+.lang-switcher { position:relative; z-index:1500; }
+.lang-btn {
+  background:rgba(255,255,255,0.08); border:1px solid var(--border);
+  border-radius:8px; padding:6px 10px; cursor:pointer;
+  font-size:12px; color:var(--text-primary);
+  display:flex; align-items:center; gap:4px;
+  transition: all 0.2s; white-space:nowrap;
+}
+.lang-btn:hover { background:rgba(255,255,255,0.12); border-color:var(--gold); }
+.lang-btn .arrow { font-size:8px; margin-left:2px; transition:transform 0.2s; }
+.lang-dropdown {
+  position:absolute; top:calc(100% + 6px); left:0;
+  background:rgba(20,5,5,0.98); border:1px solid var(--border);
+  border-radius:10px; padding:4px 0; min-width:190px;
+  opacity:0; visibility:hidden; transform:translateY(-8px);
+  transition: all 0.2s ease;
+  backdrop-filter:blur(12px); box-shadow:0 8px 32px rgba(0,0,0,0.6);
+}
+.lang-dropdown.show { opacity:1; visibility:visible; transform:translateY(0); }
+.lang-option {
+  display:flex; align-items:center; gap:10px; padding:10px 14px;
+  cursor:pointer; font-size:13px; color:var(--text-primary);
+  transition: background 0.15s; border:none; background:none; width:100%; text-align:left;
+}
+.lang-option:hover { background:rgba(255,204,68,0.1); color:var(--gold); }
+.lang-option .fi { font-size:18px; width:26px; text-align:center; flex-shrink:0; }
+.lang-option.active { color:var(--gold); background:rgba(255,204,68,0.06); }
+
+
+/* Announcement Board */
+.announce-board { margin-bottom: 14px; }
+.announce-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.announce-header .board-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+.announce-header .board-title::before { content: ''; width: 3px; height: 16px; border-radius: 2px; background: var(--neon-red); display: inline-block; }
+.btn-publish { background: linear-gradient(135deg, var(--neon-red), #CC1133); border: none; color: #fff; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.btn-publish:hover { transform: scale(1.03); box-shadow: 0 0 12px rgba(255,34,68,0.3); }
+.announce-list { max-height: 300px; overflow-y: auto; }
+.announce-item { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 11px; }
+.announce-item:last-child { border-bottom: none; }
+.announce-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.announce-publisher { color: var(--cyan); font-weight: 600; font-size: 10px; }
+.announce-time { color: var(--text-dim); font-size: 9px; }
+.announce-content { color: var(--text-primary); line-height: 1.6; font-size: 12px; word-break: break-all; }
+.announce-empty { text-align: center; color: var(--text-dim); padding: 16px 0; font-size: 12px; }
+/* Publish Modal */
+.publish-modal textarea { width: 100%; min-height: 100px; background: rgba(12,0,0,0.6); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); padding: 12px; font-size: 13px; resize: vertical; outline: none; font-family: inherit; }
+.publish-modal textarea:focus { border-color: var(--neon-red); }
+.publish-modal .char-count { text-align: right; font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+
+
+/* Swap Page */
+.swap-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; margin-bottom: 14px;
+}
+.swap-card + .swap-card { margin-top: 0; border-top: none; border-radius: 0 0 14px 14px; }
+.swap-card:first-of-type { border-radius: 14px 14px 0 0; margin-bottom: 1px; }
+.swap-card:last-of-type { border-radius: 0 0 14px 14px; }
+.swap-label { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+.swap-input-row { display: flex; align-items: center; gap: 8px; }
+.swap-input {
+  flex: 1; background: transparent; border: none; color: var(--text-primary);
+  font-size: 22px; font-weight: 700; outline: none; padding: 4px 0;
+  font-family: inherit; min-width: 0;
+}
+.swap-input::placeholder { color: var(--text-dim); }
+.swap-token-btn {
+  background: rgba(255,204,68,0.12); border: 1px solid rgba(255,204,68,0.25);
+  border-radius: 10px; padding: 8px 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  color: var(--gold); font-size: 13px; font-weight: 700;
+  white-space: nowrap; transition: all 0.2s;
+}
+.swap-token-btn:hover { background: rgba(255,204,68,0.2); }
+.swap-token-btn .arrow-down { font-size: 8px; margin-left: 2px; }
+.swap-arrow {
+  display: flex; justify-content: center; margin: -8px 0;
+  position: relative; z-index: 2;
+}
+.swap-arrow-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--card-bg); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary); font-size: 16px;
+  transition: all 0.2s;
+}
+.swap-arrow-btn:hover { border-color: var(--gold); color: var(--gold); }
+.swap-info { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+.swap-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
+.swap-info-row span:last-child { color: var(--text-secondary); }
+.swap-slippage { margin-bottom: 14px; }
+.swap-slippage-label { font-size: 11px; color: var(--text-dim); margin-bottom: 6px; }
+.swap-slippage-options { display: flex; gap: 6px; }
+.swap-slippage-opt {
+  flex: 1; padding: 6px 0; text-align: center; border-radius: 8px;
+  border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+  color: var(--text-secondary); font-size: 11px; cursor: pointer;
+  transition: all 0.2s; font-weight: 600;
+}
+.swap-slippage-opt:hover { border-color: var(--gold); }
+.swap-slippage-opt.active { background: rgba(255,204,68,0.12); color: var(--gold); border-color: var(--gold); }
+.btn-swap {
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  background: linear-gradient(135deg, var(--neon-red), #CC1133);
+  color: #fff; transition: all 0.2s;
+}
+.btn-swap:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(255,34,68,0.4); }
+.btn-swap:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<div class="app" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="lang-switcher" id="langSwitcher">
+      <button class="lang-btn" id="langBtn" onclick="event.stopPropagation();toggleLangMenu()">
+        <span id="langFlag">🇨🇳</span><span id="langLabel">简中</span><span class="arrow">▼</span>
+      </button>
+      <div class="lang-dropdown" id="langDropdown">
+        <button class="lang-option" data-lang="zh-CN" onclick="selectLang('zh-CN')"><span class="fi">🇨🇳</span>简体中文</button>
+        <button class="lang-option" data-lang="zh-TW" onclick="selectLang('zh-TW')"><span class="fi">🇹🇼</span>繁體中文</button>
+        <button class="lang-option" data-lang="en-GB" onclick="selectLang('en-GB')"><span class="fi">🇬🇧</span>English (UK)</button>
+        <button class="lang-option" data-lang="en-US" onclick="selectLang('en-US')"><span class="fi">🇺🇸</span>English (US)</button>
+        <button class="lang-option" data-lang="ko" onclick="selectLang('ko')"><span class="fi">🇰🇷</span>한국어</button>
+        <button class="lang-option" data-lang="ja" onclick="selectLang('ja')"><span class="fi">🇯🇵</span>日本語</button>
+        <button class="lang-option" data-lang="de" onclick="selectLang('de')"><span class="fi">🇩🇪</span>Deutsch</button>
+        <button class="lang-option" data-lang="hi" onclick="selectLang('hi')"><span class="fi">🇮🇳</span>हिन्दी</button>
+      </div>
+    </div>
+    <div class="logo-area">
+      <div class="logo-icon">UR</div>
+      <div class="logo-text">UR <span>Agent</span></div>
+    </div>
+    <button class="btn-wallet" id="btnWallet" onclick="connectWallet()">连接钱包</button>
+  </div>
+
+  <!-- Page 1: 首页 -->
+  <div class="page active" id="page-home">
+    <div class="price-bar">
+      <div class="price-main">
+        <div>
+          <div class="price-token"><strong>UR</strong> / <span data-i18n="priceUSDT">USDT</span></div>
+          <div class="price-val" id="urPrice">$0.000</div>
+          <div class="price-change" id="urChange">--</div>
+        </div>
+      </div>
+      <div class="price-vol">
+        <span data-i18n="vol24h">24h 成交量</span>
+        <strong id="urVol24">$0</strong>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-item"><div class="stat-val" id="totalSupply">0</div><div class="stat-label" data-i18n="totalSupply">总供应量</div></div>
+      <div class="stat-item"><div class="stat-val cyan" id="nodeCount">0</div><div class="stat-label" data-i18n="activeNodes">活跃节点数</div></div>
+      <div class="stat-item"><div class="stat-val" id="totalBurn">0</div><div class="stat-label" data-i18n="totalBurn"><span data-i18n="totalBurnDesc">累计销毁</span>量</div></div>
+      <div class="stat-item"><div class="stat-val cyan" id="refCount">0</div><div class="stat-label" data-i18n="refCount">推荐人数</div></div>
+    </div>
+    <div class="ilo-card">
+      <div class="ilo-header">
+        <div class="ilo-title"><span data-i18n="iloTitle">ILO 共筑</span> <span id="iloCountdown" style="font-size:11px;color:var(--cyan);margin-left:8px;font-weight:500;"></span></div>
+        <div class="ilo-badge" id="iloStatus" style="background:rgba(255,200,0,0.15);color:var(--gold);border:1px solid rgba(255,200,0,0.3);" data-i18n="iloNotStarted">未开始</div>
+      </div>
+      <div class="ilo-progress">
+        <div class="progress-label"><span data-i18n="iloProgress">共筑进度</span><span id="iloProgressText">0 / 5,000,000 USDT</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="iloProgressBar" style="width:0%"></div></div>
+      </div>
+      <div class="ilo-stats">
+        <span data-i18n="iloHardCap">硬顶</span><span>5,000,000 USDT</span>
+        <span data-i18n="iloParticipants">参与人数</span><span id="iloParticipants">0</span>
+        <span data-i18n="iloRate">UR 兑换率</span><span>1 USDT = 120 UR</span>
+      </div>
+      <div class="ilo-input-row">
+        <div class="input-group">
+          <label data-i18n="iloAmount">参与金额（USDT）</label>
+          <input class="input-field" id="iloAmount" type="number" data-i18n-placeholder="iloMin" placeholder="最低 100 USDT" value="500" min="100">
+        </div>
+      </div>
+      <div class="ilo-btns">
+        <button class="btn-approve" id="btnApprove" onclick="approveUSDT()"><span data-i18n="iloApproveNum">1.</span> <span data-i18n="iloApprove">批准 USDT</span></button>
+        <button class="btn-participate" id="btnParticipate" onclick="participateILO()" disabled><span data-i18n="iloParticipateNum">2.</span> <span data-i18n="iloParticipate">参与共筑</span></button>
+      </div>
+      <div class="ilo-my-contribution" id="iloMyContribution" style="display:none;">
+        <span data-i18n="iloMyContribution">我的共筑</span>: <strong id="iloMyAmount">0 USDT</strong> | <span data-i18n="iloEstimated">预计获得</span>: <strong id="iloMyUR">0 UR</strong>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="switchTab('stake')"><span data-i18n="btnStake">一键云托管</span></button>
+      <button class="btn-secondary" onclick="switchTab('earn')"><span data-i18n="btnClaim">一键领取收益</span></button>
+    </div>
+  </div>
+
+  <!-- Page 2: 云托管 -->
+  <div class="page" id="page-stake">
+    <div class="card">
+      <div class="card-title" data-i18n="stakedBalance">托管余额</div>
+      <div style="font-size:28px; font-weight:900; color:var(--gold);" id="stakedBalance">0 UR</div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">等效 ≈ <span id="stakedUSD">$0</span> USD</div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="cloudStake">云托管</div>
+      <div class="input-group">
+        <label data-i18n="stakeAmount">托管 UR 数量</label>
+        <div class="input-row">
+          <input class="input-field" id="stakeAmount" type="number" placeholder="输入 UR 数量" value="1000">
+          <span class="input-suffix">UR</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="doStake()"><span data-i18n="btnStakeNow">一键托管</span></button>
+    </div>
+    <div class="node-panel">
+      <div class="node-badge-area">
+        <div class="node-badge-icon" id="nodeBadgeIcon">V1</div>
+        <div class="node-badge-label" id="nodeBadgeLabel">Node V1</div>
+      </div>
+      <div class="node-details">
+        <div class="node-detail-row"><span data-i18n="nodeEquivalent">等效托管量</span><span id="nodeEquivalent">$0</span></div>
+        <div class="node-detail-row"><span data-i18n="nodeDownline">伞下持有</span><span id="nodeDownline">$0</span></div>
+        <div class="node-detail-row"><span data-i18n="nodeV6Count">伞下V6数</span><span id="nodeV6Count">0</span></div>
+        <div class="node-detail-row"><span data-i18n="nodeCoeff">收益系数</span><span id="nodeCoeff" style="color:var(--gold);">0%</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="tierProgress">八级等级进度</div>
+      <div class="tier-steps" id="tierSteps"></div>
+      <div class="progress-section">
+        <div class="progress-label"><span data-i18n="nextTierLabel">下一级</span>: <span id="nextTierName">V4</span></div>
+        <div class="progress-label"><span data-i18n="personalProgress">个人持有进度</span><span id="tierPersonalProgress">$0 / $0</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="tierPersonalBar" style="width:0%"></div></div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-label"><span data-i18n="downlineProgress">伞下持有进度</span><span id="tierDownlineProgress">$0 / $0</span></div>
+        <div class="progress-bar"><div class="progress-fill" id="tierDownlineBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="stakeRecords">托管记录</div>
+      <div class="record-list" id="stakeRecords"></div>
+    </div>
+  </div>
+
+  <!-- Page 3: 收益 -->
+  <div class="page" id="page-earn">
+    <div class="card" style="background:linear-gradient(135deg, rgba(255,34,68,0.12), rgba(255,204,68,0.06)); border-color:rgba(255,34,68,0.3);">
+      <div class="card-title" data-i18n="earnOverview">总收益概览</div>
+      <div style="display:flex; gap:20px;">
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:12px; color:var(--text-dim);"><span data-i18n="pendingReward">待领取</span></div>
+          <div style="font-size:26px; font-weight:900; color:var(--gold);" id="pendingReward">--</div>
+          <div style="font-size:10px; color:var(--text-dim);">--</div>
+        </div>
+        <div style="flex:1; text-align:center;">
+          <div style="font-size:12px; color:var(--text-dim);"><span data-i18n="totalEarned">累计收益</span></div>
+          <div style="font-size:26px; font-weight:900; color:var(--cyan);" id="totalEarned">--</div>
+          <div style="font-size:10px; color:var(--text-dim);">--</div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%; margin-top:14px; font-size:16px;" onclick="doClaimAll()"><span data-i18n="btnClaimAll">一键领取全部收益</span></button>
+    </div>
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="switchEarnSub(0)"><span data-i18n="subDividend">节点分红</span></button>
+      <button class="sub-tab" onclick="switchEarnSub(1)"><span data-i18n="subDaily">等级日奖励</span></button>
+    </div>
+    <div class="card" id="earnDetailCard">
+      <div id="earnDividendDetail">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="dividendSource">分红来源</span><span style="color:var(--text-dim);" data-i18n="dividendPool">3% 交易税池</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="stakeShare">托管份额</span><span style="color:var(--text-primary); font-weight:600;">-- / -- UR</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="pendingDividend">待领分红</span><span style="color:var(--gold); font-weight:700;">--</span>
+        </div>
+      </div>
+      <div id="earnDailyDetail" style="display:none;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="rewardSource">奖励来源</span><span style="color:var(--text-dim);" data-i18n="rewardSourceDesc">伞下新增业绩 × 系数</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="currentCoeff">当前系数</span><span style="color:var(--gold); font-weight:700;">--</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="todayAvg">今日日均新增</span><span style="color:var(--text-primary); font-weight:600;">--</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:11px;">
+          <span style="color:var(--text-dim);" data-i18n="pendingDaily">待领日奖励</span><span style="color:var(--gold); font-weight:700;">--</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="earnHistory">收益历史</div>
+      <div class="record-list" id="earnRecords"></div>
+    </div>
+  </div>
+
+  <!-- Page 4: 数据分析 -->
+  <div class="page" id="page-data">
+    <div class="kpi-row">
+      <div class="kpi-item"><div class="kpi-val" style="color:var(--text-dim);">--</div><div class="kpi-label" data-i18n="vol24hData">24h 交易量</div><div style="font-size:8px;color:var(--text-dim);margin-top:2px;">即将上线</div></div>
+      <div class="kpi-item"><div class="kpi-val">--</div><div class="kpi-label" data-i18n="nodeGrowth">节点增长率</div></div>
+      <div class="kpi-item"><div class="kpi-val">--</div><div class="kpi-label" data-i18n="downlineGrowth">伞下新增业绩</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="priceChart">价格走势（TWAP 预言机）</div>
+      <div class="placeholder-chart" id="priceChart">
+        <div style="font-size:28px;color:var(--text-dim);margin-bottom:8px;">--</div>
+        <div><span data-i18n="priceChartDesc">即将上线 | TWAP 预言机接入预留</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="burnChart">销毁曲线</div>
+      <div class="placeholder-chart" style="height:160px;">
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:6px;">链上数据收集中</div>
+        <div style="font-size:11px;color:var(--text-dim);"><span data-i18n="totalBurnDesc">累计销毁</span>: 从 0xdead 地址实时读取</div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- Page 5: 交易 -->
+  <div class="page" id="page-swap">
+    <div class="price-bar">
+      <div class="price-main">
+        <div>
+          <div class="price-token"><strong>UR</strong> / <span>USDT</span></div>
+          <div class="price-val" id="swapUrPrice">$0.000</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--text-dim);">1 USDT =</div>
+        <div style="font-size:18px;font-weight:900;color:var(--cyan);" id="swapRateDisplay">-- UR</div>
+      </div>
+    </div>
+
+    <!-- Pay -->
+    <div class="swap-card">
+      <div class="swap-label" data-i18n="swapPay">支付</div>
+      <div class="swap-input-row">
+        <input class="swap-input" id="swapInputAmount" type="number" placeholder="0.0" step="any" oninput="onSwapInput()">
+        <button class="swap-token-btn" id="swapPayTokenBtn" onclick="toggleSwapTokenMenu('pay')">
+          <span id="swapPayToken">USDT</span> <span class="arrow-down">▼</span>
+        </button>
+      </div>
+    </div>
+    <!-- Arrow -->
+    <div class="swap-arrow">
+      <button class="swap-arrow-btn" onclick="switchSwapDirection()" title="交换方向">↓↑</button>
+    </div>
+    <!-- Receive -->
+    <div class="swap-card">
+      <div class="swap-label" data-i18n="swapReceive">获得（预估）</div>
+      <div class="swap-input-row">
+        <input class="swap-input" id="swapOutputAmount" type="text" placeholder="0.0" readonly>
+        <button class="swap-token-btn" id="swapReceiveTokenBtn" onclick="toggleSwapTokenMenu('receive')">
+          <span id="swapReceiveToken">UR</span> <span class="arrow-down">▼</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Swap Info -->
+    <div class="swap-info" id="swapInfoBlock" style="margin-top:14px;">
+      <div class="swap-info-row"><span data-i18n="swapRate">兑换率</span><span id="swapInfoRate">--</span></div>
+      <div class="swap-info-row"><span data-i18n="swapSlippageLabel">滑点容忍度</span><span id="swapInfoSlippage">0.5%</span></div>
+      <div class="swap-info-row"><span data-i18n="swapMinReceived">最小获得量</span><span id="swapInfoMinReceived">--</span></div>
+      <div class="swap-info-row"><span data-i18n="swapPriceImpact">价格影响</span><span id="swapInfoPriceImpact">--</span></div>
+    </div>
+
+    <!-- Slippage -->
+    <div class="swap-slippage">
+      <div class="swap-slippage-label" data-i18n="swapSlippageLabel">滑点容忍度</div>
+      <div class="swap-slippage-options" id="swapSlippageOptions">
+        <div class="swap-slippage-opt" data-slip="0.1" onclick="setSlippage(0.1, this)">0.1%</div>
+        <div class="swap-slippage-opt active" data-slip="0.5" onclick="setSlippage(0.5, this)">0.5%</div>
+        <div class="swap-slippage-opt" data-slip="1" onclick="setSlippage(1, this)">1%</div>
+        <div class="swap-slippage-opt" data-slip="2" onclick="setSlippage(2, this)">2%</div>
+      </div>
+    </div>
+
+    <button class="btn-swap" id="btnSwap" onclick="executeSwap()" disabled>
+      <span data-i18n="swapEnterAmount">请输入金额</span>
+    </button>
+  </div>
+
+  <!-- Page 6: 社群 -->
+  <div class="page" id="page-social">
+    <div class="social-card" onclick="window.open('https://t.me/uragent01','_blank')">
+      <div class="social-icon">💬</div>
+      <div class="social-name"><span data-i18n="tgCommunity">Telegram 官方社群</span></div>
+      <div class="social-link">https://t.me/uragent01</div>
+      <div style="font-size:10px; color:var(--success); margin-top:6px;"><span data-i18n="tgClick">点击立即加入</span></div>
+    </div>
+    <div class="social-links">
+      <div class="social-link-item" onclick="showToast(t('comingSoon'))"><div class="icon">🐦</div><div class="name">Twitter / X</div><div class="status"><span data-i18n="comingSoon">即将上线</span></div></div>
+      <div class="social-link-item" onclick="showToast(t('comingSoon'))"><div class="icon">🎮</div><div class="name">Discord</div><div class="status"><span data-i18n="comingSoon">即将上线</span></div></div>
+      <div class="social-link-item" onclick="showToast(t('comingSoon'))"><div class="icon">📝</div><div class="name">Medium</div><div class="status"><span data-i18n="comingSoon">即将上线</span></div></div>
+      <div class="social-link-item" onclick="showToast(t('comingSoon'))"><div class="icon">📺</div><div class="name">YouTube</div><div class="status"><span data-i18n="comingSoon">即将上线</span></div></div>
+    </div>
+
+    <div class="card announce-board">
+      <div class="announce-header">
+        <div class="board-title">公告栏</div>
+        <button class="btn-publish" id="btnPublishAnnounce" style="display:none;" onclick="showPublishModal()">发布公告</button>
+      </div>
+      <div class="announce-list" id="announceList">
+        <div class="announce-empty">暂无公告</div>
+      </div>
+    </div>
+
+    <!-- Invite Friend Card -->
+    <div class="invite-card">
+      <div class="invite-title" data-i18n="inviteFriend">邀请好友</div>
+      <div class="invite-link-row">
+        <div class="invite-link-text" id="inviteLinkText">https://urtoken.uk/?ref=0x164D57cE9b48d58Bb3E8Bc4F637253be9a2F377e</div>
+        <button class="btn-copy-link" onclick="copyInviteLink()"><span data-i18n="copyLink">复制链接</span></button>
+      </div>
+      <div class="invite-hint" data-i18n="inviteShareHint">分享专属链接邀请好友，享受多层推荐奖励</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" data-i18n="myReferral">我的推荐</div>
+      <div id="bindReferrer">
+        <div class="input-group">
+          <label data-i18n="bindReferrer">绑定推荐人（首次绑定后不可更改）</label>
+          <div class="input-row">
+            <input class="input-field" id="inviterCode" type="text" data-i18n-placeholder="inviterPlaceholder" placeholder="输入推荐人的邀请码">
+            <button class="btn-primary" style="width:auto; padding:12px 20px; white-space:nowrap;" onclick="bindReferrer()"><span data-i18n="btnBind">绑定</span></button>
+          </div>
+        </div>
+      </div>
+      <div id="myReferral" style="display:none;">
+        <div style="background:rgba(255,204,68,0.08); border:1px solid rgba(255,204,68,0.2); border-radius:10px; padding:12px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:var(--text-dim);"><span data-i18n="myInviteLink">我的邀请链接</span></span>
+            <button class="btn-wallet" style="font-size:10px; padding:4px 10px;" onclick="copyRefLink()"><span data-i18n="btnCopy">复制</span></button>
+          </div>
+          <div style="font-size:13px; color:var(--cyan); word-break:break-all; margin-top:6px;" id="myRefLink">--</div>
+          <div style="font-size:10px; color:var(--text-dim); margin-top:4px;"><span data-i18n="inviteCode">邀请码</span>: <span id="myRefCode" style="color:var(--gold);">--</span></div>
+          <div style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:11px; color:var(--text-dim);"><span data-i18n="inviteFriend">邀请好友</span></span>
+              <button class="btn-wallet" style="font-size:10px; padding:4px 10px;" onclick="copyWalletLink()"><span data-i18n="copyLink">复制链接</span></button>
+            </div>
+            <div style="font-size:13px; color:var(--cyan); word-break:break-all; margin-top:6px;" id="myWalletLink">--</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <div style="flex:1; text-align:center; background:rgba(255,34,68,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--neon-red);" id="downlineL1">0</div>
+            <div style="font-size:10px; color:var(--text-dim);"><span data-i18n="L1Direct">L1 直推</span></div>
+          </div>
+          <div style="flex:1; text-align:center; background:rgba(255,204,68,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--gold);" id="downlineL2">0</div>
+            <div style="font-size:10px; color:var(--text-dim);"><span data-i18n="L2Indirect">L2 间推</span></div>
+          </div>
+          <div style="flex:1; text-align:center; background:rgba(0,204,255,0.08); border-radius:10px; padding:12px 8px;">
+            <div style="font-size:20px; font-weight:900; color:var(--cyan);" id="downlineL3">0</div>
+            <div style="font-size:10px; color:var(--text-dim);"><span data-i18n="L3Indirect">L3 间推</span></div>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:8px; font-size:10px; color:var(--text-dim);">
+          <span data-i18n="totalDownline">伞下总推荐</span>: <span id="totalDownline" style="color:var(--gold); font-weight:700;">0</span> 人
+          &nbsp;|&nbsp; <span data-i18n="referrer">推荐人</span>: <span id="boundReferrer" style="color:var(--cyan);">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" onclick="switchTab('home')" data-tab="home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span data-i18n="navHome">首页</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('stake')" data-tab="stake">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      <span data-i18n="navStake">云托管</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('earn')" data-tab="earn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span data-i18n="navEarn">收益</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('data')" data-tab="data">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span data-i18n="navData">数据</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('swap')" data-tab="swap">
+      <svg viewBox="0 0 24 24" style="fill:currentColor;"><path d="M7.5 9l3-3-3-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 15l-3 3 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      <span data-i18n="navSwap">交易</span>
+    </button>
+    <button class="nav-tab" onclick="switchTab('social')" data-tab="social">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span data-i18n="navSocial">社群</span>
+    </button>
+  </div>
+</div>
+
+
+<!-- Publish Announcement Modal -->
+<div class="modal-overlay" id="publishModalOverlay" style="display:none;">
+  <div class="modal publish-modal" id="publishModalContent">
+    <h3>发布公告</h3>
+    <textarea id="publishAnnounceText" placeholder="输入公告内容（最多200字）" maxlength="200"></textarea>
+    <div class="char-count"><span id="publishCharCount">0</span>/200</div>
+    <div class="modal-btns" style="margin-top:12px;">
+      <button class="btn-cancel" onclick="hidePublishModal()">取消</button>
+      <button class="btn-confirm" id="publishConfirmBtn" onclick="publishAnnounce()">发布</button>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+
+// ============ Language / i18n ============
+const LANG = {
+  'zh-CN': {
+    navHome:'首页',navStake:'云托管',navEarn:'收益',navData:'数据',navSocial:'社群',navSwap:'交易',swapPay:'支付',swapReceive:'获得（预估）',swapRate:'兑换率',swapSlippageLabel:'滑点容忍度',swapMinReceived:'最小获得量',swapPriceImpact:'价格影响',swapEnterAmount:'请输入金额',swapApproveUSDT:'批准 USDT',swapConfirmSwap:'确认兑换',swapTxSuccess:'交易成功',swapTxFailed:'交易失败',swapInsufficientBalance:'余额不足',swapCalculating:'计算中...',
+    priceUSDT:'USDT',vol24h:'24h 成交量',
+    totalSupply:'总供应量',activeNodes:'活跃节点数',totalBurn:'累计销毁量',refCount:'推荐人数',
+    iloTitle:'ILO 共筑',iloNotStarted:'未开始',iloInProgress:'进行中',
+    iloProgress:'共筑进度',iloHardCap:'硬顶',iloParticipants:'参与人数',iloRate:'UR 兑换率',
+    iloAmount:'参与金额（USDT）',iloMin:'最低 100 USDT',
+    iloApproveNum:'1.',iloApprove:'批准 USDT',iloParticipateNum:'2.',iloParticipate:'参与共筑',
+    iloMyContribution:'我的共筑',iloEstimated:'预计获得',
+    btnStake:'一键云托管',btnClaim:'一键领取收益',
+    announceTitle:'最新公告',
+    announceText:'UR Agent V3 主网已上线，ILO 阶段圆满结束。八级动态等级系统全面激活，云算力托管现已开放。',
+    connectWallet:'连接钱包',
+    countdownPrefix:'距开始',countdownDay:'天',countdownInProgress:'进行中',
+    stakedBalance:'托管余额',cloudStake:'云托管',stakeAmount:'托管 UR 数量',btnStakeNow:'一键托管',
+    nodeLabel:'Node',nodeEquivalent:'等效托管量',nodeDownline:'伞下持有',nodeV6Count:'伞下V6数',nodeCoeff:'收益系数',
+    tierProgress:'八级等级进度',nextTierLabel:'下一级',personalProgress:'个人持有进度',downlineProgress:'伞下持有进度',
+    stakeRecords:'托管记录',tierMaxed:'已满级',tierDone:'已达标',
+    earnOverview:'总收益概览',pendingReward:'待领取',totalEarned:'累计收益',btnClaimAll:'一键领取全部收益',
+    subDividend:'节点分红',subDaily:'等级日奖励',
+    dividendSource:'分红来源',dividendPool:'3% 交易税池',stakeShare:'托管份额',pendingDividend:'待领分红',
+    rewardSource:'奖励来源',rewardSourceDesc:'伞下新增业绩 × 系数',currentCoeff:'当前系数',todayAvg:'今日日均新增',pendingDaily:'待领日奖励',
+    earnHistory:'收益历史',
+    vol24hData:'24h 交易量',nodeGrowth:'节点增长率',downlineGrowth:'伞下新增业绩',
+    priceChart:'价格走势（TWAP 预言机）',priceChartDesc:'UR/USDT 7日价格曲线（模拟） | TWAP 预言机接入预留',
+    burnChart:'销毁曲线',totalBurnDesc:'累计销毁',dailyBurn:'日均销毁',
+    tgCommunity:'Telegram 官方社群',tgClick:'点击立即加入',comingSoon:'即将上线',
+    myReferral:'我的推荐',bindReferrer:'绑定推荐人（首次绑定后不可更改）',inviterPlaceholder:'输入推荐人的邀请码',btnBind:'绑定',
+    myInviteLink:'我的邀请链接',btnCopy:'复制',inviteCode:'邀请码',
+    L1Direct:'L1 直推',L2Indirect:'L2 间推',L3Indirect:'L3 间推',totalDownline:'伞下总推荐',referrer:'推荐人',
+    inviteFriend:'邀请好友',copyLink:'复制链接',linkCopied:'邀请链接已复制到剪贴板',inviteShareHint:'分享专属链接邀请好友，享受多层推荐奖励',
+    bindReferrerConfirm:'确认绑定推荐人',bindSuccess:'绑定成功',bindFailed:'绑定失败',pleaseConnectFirst:'请先连接钱包',selfReferral:'不能绑定自己',referrerAddress:'推荐人地址',confirmBind:'确认绑定',
+    rankTitle:'推荐排行榜',
+    recordStake:'云托管',recordDividend:'节点分红',recordDaily:'等级日奖励',recordClaim:'领取收益',
+    modalCancel:'取消',modalConfirm:'确认',
+  },
+  'zh-TW': {
+    navHome:'首頁',navStake:'雲托管',navEarn:'收益',navData:'數據',navSocial:'社群',navSwap:'交易',swapPay:'支付',swapReceive:'獲得（預估）',swapRate:'兌換率',swapSlippageLabel:'滑點容忍度',swapMinReceived:'最小獲得量',swapPriceImpact:'價格影響',swapEnterAmount:'請輸入金額',swapApproveUSDT:'批准 USDT',swapConfirmSwap:'確認兌換',swapTxSuccess:'交易成功',swapTxFailed:'交易失敗',swapInsufficientBalance:'餘額不足',swapCalculating:'計算中...',
+    priceUSDT:'USDT',vol24h:'24h 成交量',
+    totalSupply:'總供應量',activeNodes:'活躍節點數',totalBurn:'累計銷毀量',refCount:'推薦人數',
+    iloTitle:'ILO 共築',iloNotStarted:'未開始',iloInProgress:'進行中',
+    iloProgress:'共築進度',iloHardCap:'硬頂',iloParticipants:'參與人數',iloRate:'UR 兌換率',
+    iloAmount:'參與金額（USDT）',iloMin:'最低 100 USDT',
+    iloApproveNum:'1.',iloApprove:'批准 USDT',iloParticipateNum:'2.',iloParticipate:'參與共築',
+    iloMyContribution:'我的共築',iloEstimated:'預計獲得',
+    btnStake:'一鍵雲托管',btnClaim:'一鍵領取收益',
+    announceTitle:'最新公告',
+    announceText:'UR Agent V3 主網已上線，ILO 階段圓滿結束。八級動態等級系統全面激活，雲算力托管現已開放。',
+    connectWallet:'連接錢包',
+    countdownPrefix:'距開始',countdownDay:'天',countdownInProgress:'進行中',
+    stakedBalance:'托管餘額',cloudStake:'雲托管',stakeAmount:'托管 UR 數量',btnStakeNow:'一鍵托管',
+    nodeLabel:'Node',nodeEquivalent:'等效托管量',nodeDownline:'傘下持有',nodeV6Count:'傘下V6數',nodeCoeff:'收益係數',
+    tierProgress:'八級等級進度',nextTierLabel:'下一級',personalProgress:'個人持有進度',downlineProgress:'傘下持有進度',
+    stakeRecords:'托管記錄',tierMaxed:'已滿級',tierDone:'已達標',
+    earnOverview:'總收益概覽',pendingReward:'待領取',totalEarned:'累計收益',btnClaimAll:'一鍵領取全部收益',
+    subDividend:'節點分紅',subDaily:'等級日獎勵',
+    dividendSource:'分紅來源',dividendPool:'3% 交易稅池',stakeShare:'托管份額',pendingDividend:'待領分紅',
+    rewardSource:'獎勵來源',rewardSourceDesc:'傘下新增業績 × 係數',currentCoeff:'當前係數',todayAvg:'今日日均新增',pendingDaily:'待領日獎勵',
+    earnHistory:'收益歷史',
+    vol24hData:'24h 交易量',nodeGrowth:'節點增長率',downlineGrowth:'傘下新增業績',
+    priceChart:'價格走勢（TWAP 預言機）',priceChartDesc:'UR/USDT 7日價格曲線（模擬） | TWAP 預言機接入預留',
+    burnChart:'銷毀曲線',totalBurnDesc:'累計銷毀',dailyBurn:'日均銷毀',
+    tgCommunity:'Telegram 官方社群',tgClick:'點擊立即加入',comingSoon:'即將上線',
+    myReferral:'我的推薦',bindReferrer:'綁定推薦人（首次綁定後不可更改）',inviterPlaceholder:'輸入推薦人的邀請碼',btnBind:'綁定',
+    myInviteLink:'我的邀請鏈接',btnCopy:'複製',inviteCode:'邀請碼',
+    L1Direct:'L1 直推',L2Indirect:'L2 間推',L3Indirect:'L3 間推',totalDownline:'傘下總推薦',referrer:'推薦人',
+    inviteFriend:'邀請好友',copyLink:'複製連結',linkCopied:'邀請連結已複製到剪貼簿',inviteShareHint:'分享專屬連結邀請好友，享受多層推薦獎勵',
+    bindReferrerConfirm:'確認綁定推薦人',bindSuccess:'綁定成功',bindFailed:'綁定失敗',pleaseConnectFirst:'請先連接錢包',selfReferral:'不能綁定自己',referrerAddress:'推薦人地址',confirmBind:'確認綁定',
+    rankTitle:'推薦排行榜',
+    recordStake:'雲托管',recordDividend:'節點分紅',recordDaily:'等級日獎勵',recordClaim:'領取收益',
+    modalCancel:'取消',modalConfirm:'確認',
+  },
+  'en-GB': {
+    navHome:'Home',navStake:'Cloud Stake',navEarn:'Earnings',navData:'Data',navSocial:'Community',navSwap:'Swap',swapPay:'Pay',swapReceive:'Receive (Est.)',swapRate:'Rate',swapSlippageLabel:'Slippage Tolerance',swapMinReceived:'Minimum Received',swapPriceImpact:'Price Impact',swapEnterAmount:'Enter Amount',swapApproveUSDT:'Approve USDT',swapConfirmSwap:'Confirm Swap',swapTxSuccess:'Swap Successful',swapTxFailed:'Swap Failed',swapInsufficientBalance:'Insufficient Balance',swapCalculating:'Calculating...',
+    priceUSDT:'USDT',vol24h:'24h Volume',
+    totalSupply:'Total Supply',activeNodes:'Active Nodes',totalBurn:'Total Burned',refCount:'Referrals',
+    iloTitle:'ILO Co-Build',iloNotStarted:'Not Started',iloInProgress:'In Progress',
+    iloProgress:'Progress',iloHardCap:'Hard Cap',iloParticipants:'Participants',iloRate:'UR Rate',
+    iloAmount:'Amount (USDT)',iloMin:'Min. 100 USDT',
+    iloApproveNum:'1.',iloApprove:'Approve USDT',iloParticipateNum:'2.',iloParticipate:'Participate',
+    iloMyContribution:'My Contribution',iloEstimated:'Estimated',
+    btnStake:'Cloud Stake',btnClaim:'Claim Rewards',
+    announceTitle:'Announcements',
+    announceText:'UR Agent V3 mainnet is live. The ILO phase has been successfully completed. The eight-tier dynamic system is now fully active, and cloud computing staking is open.',
+    connectWallet:'Connect Wallet',
+    countdownPrefix:'Starts in',countdownDay:'d',countdownInProgress:'In Progress',
+    stakedBalance:'Staked Balance',cloudStake:'Cloud Staking',stakeAmount:'Stake Amount (UR)',btnStakeNow:'Stake Now',
+    nodeLabel:'Node',nodeEquivalent:'Equivalent Stake',nodeDownline:'Downline Holdings',nodeV6Count:'Downline V6',nodeCoeff:'Reward Coefficient',
+    tierProgress:'Tier Progress',nextTierLabel:'Next Tier',personalProgress:'Personal Progress',downlineProgress:'Downline Progress',
+    stakeRecords:'Staking Records',tierMaxed:'Max Tier',tierDone:'Completed',
+    earnOverview:'Earnings Overview',pendingReward:'Pending',totalEarned:'Total Earned',btnClaimAll:'Claim All Rewards',
+    subDividend:'Node Dividend',subDaily:'Daily Tier Bonus',
+    dividendSource:'Dividend Source',dividendPool:'3% Trading Fee Pool',stakeShare:'Stake Share',pendingDividend:'Pending Dividend',
+    rewardSource:'Reward Source',rewardSourceDesc:'Downline Growth × Coefficient',currentCoeff:'Current Coefficient',todayAvg:'Today Avg Growth',pendingDaily:'Pending Daily Bonus',
+    earnHistory:'Earnings History',
+    vol24hData:'24h Volume',nodeGrowth:'Node Growth',downlineGrowth:'Downline Growth',
+    priceChart:'Price Trend (TWAP Oracle)',priceChartDesc:'UR/USDT 7-Day Price (Simulated) | TWAP Oracle Ready',
+    burnChart:'Burn Curve',totalBurnDesc:'Total Burned',dailyBurn:'Daily Burn Rate',
+    tgCommunity:'Telegram Community',tgClick:'Click to Join',comingSoon:'Coming Soon',
+    myReferral:'My Referrals',bindReferrer:'Bind Referrer (cannot be changed)',inviterPlaceholder:'Enter referral code',btnBind:'Bind',
+    myInviteLink:'My Invite Link',btnCopy:'Copy',inviteCode:'Invite Code',
+    L1Direct:'L1 Direct',L2Indirect:'L2 Indirect',L3Indirect:'L3 Indirect',totalDownline:'Total Downline',referrer:'Referrer',
+    inviteFriend:'Invite Friends',copyLink:'Copy Link',linkCopied:'Invite link copied to clipboard',inviteShareHint:'Share your referral link to invite friends and earn multi-tier rewards',
+    bindReferrerConfirm:'Confirm Referrer Binding',bindSuccess:'Binding successful',bindFailed:'Binding failed',pleaseConnectFirst:'Please connect wallet first',selfReferral:'Cannot refer yourself',referrerAddress:'Referrer Address',confirmBind:'Confirm Binding',
+    rankTitle:'Leaderboard',
+    recordStake:'Cloud Stake',recordDividend:'Node Dividend',recordDaily:'Daily Tier Bonus',recordClaim:'Claim Rewards',
+    modalCancel:'Cancel',modalConfirm:'Confirm',
+  },
+  'en-US': {
+    navHome:'Home',navStake:'Cloud Stake',navEarn:'Earnings',navData:'Data',navSocial:'Community',navSwap:'Swap',swapPay:'Pay',swapReceive:'Receive (Est.)',swapRate:'Rate',swapSlippageLabel:'Slippage Tolerance',swapMinReceived:'Minimum Received',swapPriceImpact:'Price Impact',swapEnterAmount:'Enter Amount',swapApproveUSDT:'Approve USDT',swapConfirmSwap:'Confirm Swap',swapTxSuccess:'Swap Successful',swapTxFailed:'Swap Failed',swapInsufficientBalance:'Insufficient Balance',swapCalculating:'Calculating...',
+    priceUSDT:'USDT',vol24h:'24h Volume',
+    totalSupply:'Total Supply',activeNodes:'Active Nodes',totalBurn:'Total Burned',refCount:'Referrals',
+    iloTitle:'ILO Co-Build',iloNotStarted:'Not Started',iloInProgress:'In Progress',
+    iloProgress:'Progress',iloHardCap:'Hard Cap',iloParticipants:'Participants',iloRate:'UR Rate',
+    iloAmount:'Amount (USDT)',iloMin:'Min. 100 USDT',
+    iloApproveNum:'1.',iloApprove:'Approve USDT',iloParticipateNum:'2.',iloParticipate:'Participate',
+    iloMyContribution:'My Contribution',iloEstimated:'Estimated',
+    btnStake:'Cloud Stake',btnClaim:'Claim Rewards',
+    announceTitle:'Announcements',
+    announceText:'UR Agent V3 mainnet is live. The ILO phase has been successfully completed. The eight-tier dynamic system is now fully active, and cloud computing staking is open.',
+    connectWallet:'Connect Wallet',
+    countdownPrefix:'Starts in',countdownDay:'d',countdownInProgress:'In Progress',
+    stakedBalance:'Staked Balance',cloudStake:'Cloud Staking',stakeAmount:'Stake Amount (UR)',btnStakeNow:'Stake Now',
+    nodeLabel:'Node',nodeEquivalent:'Equivalent Stake',nodeDownline:'Downline Holdings',nodeV6Count:'Downline V6',nodeCoeff:'Reward Coefficient',
+    tierProgress:'Tier Progress',nextTierLabel:'Next Tier',personalProgress:'Personal Progress',downlineProgress:'Downline Progress',
+    stakeRecords:'Staking Records',tierMaxed:'Max Tier',tierDone:'Completed',
+    earnOverview:'Earnings Overview',pendingReward:'Pending',totalEarned:'Total Earned',btnClaimAll:'Claim All Rewards',
+    subDividend:'Node Dividend',subDaily:'Daily Tier Bonus',
+    dividendSource:'Dividend Source',dividendPool:'3% Trading Fee Pool',stakeShare:'Stake Share',pendingDividend:'Pending Dividend',
+    rewardSource:'Reward Source',rewardSourceDesc:'Downline Growth × Coefficient',currentCoeff:'Current Coefficient',todayAvg:'Today Avg Growth',pendingDaily:'Pending Daily Bonus',
+    earnHistory:'Earnings History',
+    vol24hData:'24h Volume',nodeGrowth:'Node Growth',downlineGrowth:'Downline Growth',
+    priceChart:'Price Trend (TWAP Oracle)',priceChartDesc:'UR/USDT 7-Day Price (Simulated) | TWAP Oracle Ready',
+    burnChart:'Burn Curve',totalBurnDesc:'Total Burned',dailyBurn:'Daily Burn Rate',
+    tgCommunity:'Telegram Community',tgClick:'Click to Join',comingSoon:'Coming Soon',
+    myReferral:'My Referrals',bindReferrer:'Bind Referrer (cannot be changed)',inviterPlaceholder:'Enter referral code',btnBind:'Bind',
+    myInviteLink:'My Invite Link',btnCopy:'Copy',inviteCode:'Invite Code',
+    L1Direct:'L1 Direct',L2Indirect:'L2 Indirect',L3Indirect:'L3 Indirect',totalDownline:'Total Downline',referrer:'Referrer',
+    inviteFriend:'Invite Friends',copyLink:'Copy Link',linkCopied:'Invite link copied to clipboard',inviteShareHint:'Share your referral link to invite friends and earn multi-tier rewards',
+    bindReferrerConfirm:'Confirm Referrer Binding',bindSuccess:'Binding successful',bindFailed:'Binding failed',pleaseConnectFirst:'Please connect wallet first',selfReferral:'Cannot refer yourself',referrerAddress:'Referrer Address',confirmBind:'Confirm Binding',
+    rankTitle:'Leaderboard',
+    recordStake:'Cloud Stake',recordDividend:'Node Dividend',recordDaily:'Daily Tier Bonus',recordClaim:'Claim Rewards',
+    modalCancel:'Cancel',modalConfirm:'Confirm',
+  },
+  'ko': {
+    navHome:'홈',navStake:'클라우드 스테이킹',navEarn:'수익',navData:'데이터',navSocial:'커뮤니티',navSwap:'스왑',swapPay:'지불',swapReceive:'수령 (예상)',swapRate:'환율',swapSlippageLabel:'슬리피지 허용치',swapMinReceived:'최소 수령량',swapPriceImpact:'가격 영향',swapEnterAmount:'금액 입력',swapApproveUSDT:'USDT 승인',swapConfirmSwap:'스왑 확인',swapTxSuccess:'스왑 성공',swapTxFailed:'스왑 실패',swapInsufficientBalance:'잔액 부족',swapCalculating:'계산 중...',
+    priceUSDT:'USDT',vol24h:'24시간 거래량',
+    totalSupply:'총 공급량',activeNodes:'활성 노드',totalBurn:'누적 소각량',refCount:'추천인 수',
+    iloTitle:'ILO 공동 구축',iloNotStarted:'시작 전',iloInProgress:'진행 중',
+    iloProgress:'진행률',iloHardCap:'하드캡',iloParticipants:'참여자',iloRate:'UR 환율',
+    iloAmount:'참여 금액 (USDT)',iloMin:'최소 100 USDT',
+    iloApproveNum:'1.',iloApprove:'USDT 승인',iloParticipateNum:'2.',iloParticipate:'참여하기',
+    iloMyContribution:'내 참여 내역',iloEstimated:'예상 수령',
+    btnStake:'클라우드 스테이킹',btnClaim:'수익 수령',
+    announceTitle:'공지사항',
+    announceText:'UR Agent V3 메인넷이 출시되었습니다. ILO 단계가 성공적으로 완료되었으며, 8단계 동적 등급 시스템이 완전히 활성화되었습니다. 클라우드 컴퓨팅 스테이킹이 오픈되었습니다.',
+    connectWallet:'지갑 연결',
+    countdownPrefix:'시작까지',countdownDay:'일',countdownInProgress:'진행 중',
+    stakedBalance:'스테이킹 잔액',cloudStake:'클라우드 스테이킹',stakeAmount:'스테이킹 수량 (UR)',btnStakeNow:'스테이킹',
+    nodeLabel:'Node',nodeEquivalent:'환산 스테이킹',nodeDownline:'하위 보유량',nodeV6Count:'하위 V6',nodeCoeff:'보상 계수',
+    tierProgress:'등급 진행도',nextTierLabel:'다음 등급',personalProgress:'개인 진행도',downlineProgress:'하위 진행도',
+    stakeRecords:'스테이킹 기록',tierMaxed:'최고 등급',tierDone:'달성 완료',
+    earnOverview:'수익 개요',pendingReward:'미수령',totalEarned:'누적 수익',btnClaimAll:'전체 수익 수령',
+    subDividend:'노드 배당',subDaily:'일일 등급 보상',
+    dividendSource:'배당 출처',dividendPool:'3% 거래 수수료 풀',stakeShare:'스테이킹 비중',pendingDividend:'미수령 배당',
+    rewardSource:'보상 출처',rewardSourceDesc:'하위 신규 실적 × 계수',currentCoeff:'현재 계수',todayAvg:'오늘 일평균 신규',pendingDaily:'미수령 일일 보상',
+    earnHistory:'수익 내역',
+    vol24hData:'24시간 거래량',nodeGrowth:'노드 성장률',downlineGrowth:'하위 신규 실적',
+    priceChart:'가격 추이 (TWAP 오라클)',priceChartDesc:'UR/USDT 7일 가격 곡선 (시뮬레이션) | TWAP 오라클 준비',
+    burnChart:'소각 곡선',totalBurnDesc:'누적 소각',dailyBurn:'일평균 소각률',
+    tgCommunity:'텔레그램 공식 커뮤니티',tgClick:'클릭하여 참여',comingSoon:'곧 출시',
+    myReferral:'내 추천',bindReferrer:'추천인 등록 (변경 불가)',inviterPlaceholder:'추천인 코드 입력',btnBind:'등록',
+    myInviteLink:'내 초대 링크',btnCopy:'복사',inviteCode:'초대 코드',
+    L1Direct:'L1 직접 추천',L2Indirect:'L2 간접 추천',L3Indirect:'L3 간접 추천',totalDownline:'총 하위 회원',referrer:'추천인',
+    inviteFriend:'친구 초대',copyLink:'링크 복사',linkCopied:'초대 링크가 클립보드에 복사되었습니다',inviteShareHint:'전용 링크를 공유하여 친구를 초대하고 다단계 추천 보상을 받으세요',
+    bindReferrerConfirm:'추천인 바인딩 확인',bindSuccess:'바인딩 성공',bindFailed:'바인딩 실패',pleaseConnectFirst:'먼저 지갑을 연결하세요',selfReferral:'자기 자신을 추천할 수 없습니다',referrerAddress:'추천인 주소',confirmBind:'바인딩 확인',
+    rankTitle:'추천 랭킹',
+    recordStake:'클라우드 스테이킹',recordDividend:'노드 배당',recordDaily:'일일 등급 보상',recordClaim:'수익 수령',
+    modalCancel:'취소',modalConfirm:'확인',
+  },
+  'ja': {
+    navHome:'ホーム',navStake:'クラウドステーク',navEarn:'収益',navData:'データ',navSocial:'コミュニティ',navSwap:'スワップ',swapPay:'支払い',swapReceive:'受取（推定）',swapRate:'レート',swapSlippageLabel:'スリッページ許容度',swapMinReceived:'最小受取量',swapPriceImpact:'価格影響',swapEnterAmount:'金額を入力',swapApproveUSDT:'USDT承認',swapConfirmSwap:'スワップ確認',swapTxSuccess:'スワップ成功',swapTxFailed:'スワップ失敗',swapInsufficientBalance:'残高不足',swapCalculating:'計算中...',
+    priceUSDT:'USDT',vol24h:'24時間取引量',
+    totalSupply:'総供給量',activeNodes:'アクティブノード',totalBurn:'累計バーン量',refCount:'紹介人数',
+    iloTitle:'ILO共築',iloNotStarted:'未開始',iloInProgress:'進行中',
+    iloProgress:'共築進捗',iloHardCap:'ハードキャップ',iloParticipants:'参加人数',iloRate:'UR交換率',
+    iloAmount:'参加金額（USDT）',iloMin:'最低 100 USDT',
+    iloApproveNum:'1.',iloApprove:'USDT承認',iloParticipateNum:'2.',iloParticipate:'参加する',
+    iloMyContribution:'マイ共築',iloEstimated:'受取予定',
+    btnStake:'クラウドステーク',btnClaim:'収益受取',
+    announceTitle:'最新のお知らせ',
+    announceText:'UR Agent V3メインネットがリリースされました。ILOフェーズは無事完了し、8段階動的レベルシステムが完全に稼働、クラウドコンピューティングステーキングが開始されました。',
+    connectWallet:'ウォレット接続',
+    countdownPrefix:'開始まで',countdownDay:'日',countdownInProgress:'進行中',
+    stakedBalance:'ステーク残高',cloudStake:'クラウドステーキング',stakeAmount:'ステーク数量 (UR)',btnStakeNow:'ステークする',
+    nodeLabel:'Node',nodeEquivalent:'換算ステーク量',nodeDownline:'配下保有量',nodeV6Count:'配下V6数',nodeCoeff:'報酬係数',
+    tierProgress:'レベル進捗',nextTierLabel:'次のレベル',personalProgress:'個人進捗',downlineProgress:'配下進捗',
+    stakeRecords:'ステーク履歴',tierMaxed:'最高レベル',tierDone:'達成済',
+    earnOverview:'収益概要',pendingReward:'未受取',totalEarned:'累計収益',btnClaimAll:'全収益受取',
+    subDividend:'ノード配当',subDaily:'デイリーレベル報酬',
+    dividendSource:'配当ソース',dividendPool:'3%取引手数料プール',stakeShare:'ステークシェア',pendingDividend:'未受取配当',
+    rewardSource:'報酬ソース',rewardSourceDesc:'配下新規実績 × 係数',currentCoeff:'現在の係数',todayAvg:'本日の平均新規',pendingDaily:'未受取デイリー報酬',
+    earnHistory:'収益履歴',
+    vol24hData:'24時間取引量',nodeGrowth:'ノード成長率',downlineGrowth:'配下新規実績',
+    priceChart:'価格推移（TWAPオラクル）',priceChartDesc:'UR/USDT 7日間価格曲線（シミュレーション）| TWAPオラクル準備済',
+    burnChart:'バーン曲線',totalBurnDesc:'累計バーン',dailyBurn:'1日平均バーン率',
+    tgCommunity:'Telegram公式コミュニティ',tgClick:'クリックして参加',comingSoon:'近日公開',
+    myReferral:'マイ紹介',bindReferrer:'紹介者を登録（変更不可）',inviterPlaceholder:'紹介コードを入力',btnBind:'登録',
+    myInviteLink:'マイ招待リンク',btnCopy:'コピー',inviteCode:'招待コード',
+    L1Direct:'L1 直接紹介',L2Indirect:'L2 間接紹介',L3Indirect:'L3 間接紹介',totalDownline:'配下総数',referrer:'紹介者',
+    inviteFriend:'友達を招待',copyLink:'リンクをコピー',linkCopied:'招待リンクをクリップボードにコピーしました',inviteShareHint:'専用リンクを共有して友達を招待し、多層紹介報酬を獲得',
+    bindReferrerConfirm:'紹介者のバインド確認',bindSuccess:'バインド成功',bindFailed:'バインド失敗',pleaseConnectFirst:'最初にウォレットを接続してください',selfReferral:'自分自身を紹介できません',referrerAddress:'紹介者アドレス',confirmBind:'バインド確認',
+    rankTitle:'紹介ランキング',
+    recordStake:'クラウドステーク',recordDividend:'ノード配当',recordDaily:'デイリーレベル報酬',recordClaim:'収益受取',
+    modalCancel:'キャンセル',modalConfirm:'確認',
+  },
+  'de': {
+    navHome:'Start',navStake:'Cloud-Staking',navEarn:'Erträge',navData:'Daten',navSocial:'Community',navSwap:'Tausch',swapPay:'Zahlen',swapReceive:'Erhalten (gesch.)',swapRate:'Kurs',swapSlippageLabel:'Slippage-Toleranz',swapMinReceived:'Min. Erhalt',swapPriceImpact:'Preiseinfluss',swapEnterAmount:'Betrag eingeben',swapApproveUSDT:'USDT genehmigen',swapConfirmSwap:'Tausch bestätigen',swapTxSuccess:'Tausch erfolgreich',swapTxFailed:'Tausch fehlgeschlagen',swapInsufficientBalance:'Unzureichendes Guthaben',swapCalculating:'Berechnung...',
+    priceUSDT:'USDT',vol24h:'24h Volumen',
+    totalSupply:'Gesamtangebot',activeNodes:'Aktive Knoten',totalBurn:'Gesamt verbrannt',refCount:'Empfehlungen',
+    iloTitle:'ILO Co-Build',iloNotStarted:'Nicht gestartet',iloInProgress:'Läuft',
+    iloProgress:'Fortschritt',iloHardCap:'Hard Cap',iloParticipants:'Teilnehmer',iloRate:'UR Wechselkurs',
+    iloAmount:'Betrag (USDT)',iloMin:'Min. 100 USDT',
+    iloApproveNum:'1.',iloApprove:'USDT genehmigen',iloParticipateNum:'2.',iloParticipate:'Teilnehmen',
+    iloMyContribution:'Mein Beitrag',iloEstimated:'Voraussichtlich',
+    btnStake:'Cloud-Staking',btnClaim:'Erträge abholen',
+    announceTitle:'Ankündigungen',
+    announceText:'UR Agent V3 Mainnet ist live. Die ILO-Phase wurde erfolgreich abgeschlossen. Das achtstufige dynamische System ist vollständig aktiv und Cloud-Computing-Staking ist geöffnet.',
+    connectWallet:'Wallet verbinden',
+    countdownPrefix:'Start in',countdownDay:'T',countdownInProgress:'Läuft',
+    stakedBalance:'Staking-Guthaben',cloudStake:'Cloud-Staking',stakeAmount:'Staking-Betrag (UR)',btnStakeNow:'Staken',
+    nodeLabel:'Node',nodeEquivalent:'Äquivalenter Einsatz',nodeDownline:'Downline-Bestände',nodeV6Count:'Downline V6',nodeCoeff:'Belohnungskoeffizient',
+    tierProgress:'Stufenfortschritt',nextTierLabel:'Nächste Stufe',personalProgress:'Persönlicher Fortschritt',downlineProgress:'Downline-Fortschritt',
+    stakeRecords:'Staking-Verlauf',tierMaxed:'Max. Stufe',tierDone:'Erreicht',
+    earnOverview:'Ertragsübersicht',pendingReward:'Ausstehend',totalEarned:'Gesamtertrag',btnClaimAll:'Alle Erträge abholen',
+    subDividend:'Knoten-Dividende',subDaily:'Täglicher Stufenbonus',
+    dividendSource:'Dividendenquelle',dividendPool:'3% Handelsgebühren-Pool',stakeShare:'Staking-Anteil',pendingDividend:'Ausstehende Dividende',
+    rewardSource:'Belohnungsquelle',rewardSourceDesc:'Downline-Wachstum × Koeffizient',currentCoeff:'Aktueller Koeffizient',todayAvg:'Heutiges Ø-Wachstum',pendingDaily:'Ausstehender Tagesbonus',
+    earnHistory:'Ertragsverlauf',
+    vol24hData:'24h Volumen',nodeGrowth:'Knotenwachstum',downlineGrowth:'Downline-Wachstum',
+    priceChart:'Preistrend (TWAP-Orakel)',priceChartDesc:'UR/USDT 7-Tage-Preiskurve (Simulation) | TWAP-Orakel bereit',
+    burnChart:'Burn-Kurve',totalBurnDesc:'Gesamt verbrannt',dailyBurn:'Tägliche Burn-Rate',
+    tgCommunity:'Telegram Community',tgClick:'Klicken zum Beitreten',comingSoon:'Demnächst',
+    myReferral:'Meine Empfehlungen',bindReferrer:'Werber binden (unveränderlich)',inviterPlaceholder:'Werbecode eingeben',btnBind:'Binden',
+    myInviteLink:'Mein Einladungslink',btnCopy:'Kopieren',inviteCode:'Einladungscode',
+    L1Direct:'L1 Direkt',L2Indirect:'L2 Indirekt',L3Indirect:'L3 Indirekt',totalDownline:'Gesamt Downline',referrer:'Werber',
+    inviteFriend:'Freunde einladen',copyLink:'Link kopieren',linkCopied:'Einladungslink in die Zwischenablage kopiert',inviteShareHint:'Teile deinen Einladungslink und verdiene mehrstufige Empfehlungsprämien',
+    bindReferrerConfirm:'Werber-Bindung bestätigen',bindSuccess:'Bindung erfolgreich',bindFailed:'Bindung fehlgeschlagen',pleaseConnectFirst:'Bitte zuerst Wallet verbinden',selfReferral:'Kann sich nicht selbst empfehlen',referrerAddress:'Werber-Adresse',confirmBind:'Bindung bestätigen',
+    rankTitle:'Bestenliste',
+    recordStake:'Cloud-Staking',recordDividend:'Knoten-Dividende',recordDaily:'Täglicher Stufenbonus',recordClaim:'Erträge abholen',
+    modalCancel:'Abbrechen',modalConfirm:'Bestätigen',
+  },
+  'hi': {
+    navHome:'होम',navStake:'क्लाउड स्टेक',navEarn:'आय',navData:'डेटा',navSocial:'समुदाय',navSwap:'स्वैप',swapPay:'भुगतान',swapReceive:'प्राप्त (अनुमानित)',swapRate:'दर',swapSlippageLabel:'स्लिपेज सहनशीलता',swapMinReceived:'न्यूनतम प्राप्त',swapPriceImpact:'मूल्य प्रभाव',swapEnterAmount:'राशि दर्ज करें',swapApproveUSDT:'USDT स्वीकृत करें',swapConfirmSwap:'स्वैप की पुष्टि करें',swapTxSuccess:'स्वैप सफल',swapTxFailed:'स्वैप विफल',swapInsufficientBalance:'अपर्याप्त शेष',swapCalculating:'गणना हो रही है...',
+    priceUSDT:'USDT',vol24h:'24 घंटे का वॉल्यूम',
+    totalSupply:'कुल आपूर्ति',activeNodes:'सक्रिय नोड्स',totalBurn:'कुल बर्न',refCount:'रेफ़रल',
+    iloTitle:'ILO सह-निर्माण',iloNotStarted:'शुरू नहीं हुआ',iloInProgress:'जारी है',
+    iloProgress:'प्रगति',iloHardCap:'हार्ड कैप',iloParticipants:'प्रतिभागी',iloRate:'UR विनिमय दर',
+    iloAmount:'राशि (USDT)',iloMin:'न्यूनतम 100 USDT',
+    iloApproveNum:'1.',iloApprove:'USDT स्वीकृत करें',iloParticipateNum:'2.',iloParticipate:'भाग लें',
+    iloMyContribution:'मेरा योगदान',iloEstimated:'अनुमानित प्राप्ति',
+    btnStake:'क्लाउड स्टेक',btnClaim:'आय प्राप्त करें',
+    announceTitle:'घोषणाएं',
+    announceText:'UR Agent V3 मेननेट लाइव है। ILO चरण सफलतापूर्वक पूरा हो गया है। आठ-स्तरीय गतिशील प्रणाली पूरी तरह सक्रिय है और क्लाउड कंप्यूटिंग स्टेकिंग खुली है।',
+    connectWallet:'वॉलेट कनेक्ट करें',
+    countdownPrefix:'शुरू होने में',countdownDay:'दिन',countdownInProgress:'जारी है',
+    stakedBalance:'स्टेक बैलेंस',cloudStake:'क्लाउड स्टेकिंग',stakeAmount:'स्टेक राशि (UR)',btnStakeNow:'स्टेक करें',
+    nodeLabel:'Node',nodeEquivalent:'समतुल्य स्टेक',nodeDownline:'डाउनलाइन होल्डिंग',nodeV6Count:'डाउनलाइन V6',nodeCoeff:'इनाम गुणांक',
+    tierProgress:'स्तर प्रगति',nextTierLabel:'अगला स्तर',personalProgress:'व्यक्तिगत प्रगति',downlineProgress:'डाउनलाइन प्रगति',
+    stakeRecords:'स्टेकिंग रिकॉर्ड',tierMaxed:'अधिकतम स्तर',tierDone:'पूर्ण',
+    earnOverview:'आय अवलोकन',pendingReward:'लंबित',totalEarned:'कुल आय',btnClaimAll:'सभी आय प्राप्त करें',
+    subDividend:'नोड लाभांश',subDaily:'दैनिक स्तर बोनस',
+    dividendSource:'लाभांश स्रोत',dividendPool:'3% ट्रेडिंग शुल्क पूल',stakeShare:'स्टेक हिस्सा',pendingDividend:'लंबित लाभांश',
+    rewardSource:'इनाम स्रोत',rewardSourceDesc:'डाउनलाइन वृद्धि × गुणांक',currentCoeff:'वर्तमान गुणांक',todayAvg:'आज का औसत वृद्धि',pendingDaily:'लंबित दैनिक बोनस',
+    earnHistory:'आय इतिहास',
+    vol24hData:'24 घंटे का वॉल्यूम',nodeGrowth:'नोड वृद्धि',downlineGrowth:'डाउनलाइन वृद्धि',
+    priceChart:'मूल्य रुझान (TWAP ओरेकल)',priceChartDesc:'UR/USDT 7-दिन मूल्य वक्र (सिमुलेटेड) | TWAP ओरेकल तैयार',
+    burnChart:'बर्न वक्र',totalBurnDesc:'कुल बर्न',dailyBurn:'दैनिक बर्न दर',
+    tgCommunity:'टेलीग्राम समुदाय',tgClick:'जुड़ने के लिए क्लिक करें',comingSoon:'जल्द आ रहा है',
+    myReferral:'मेरे रेफ़रल',bindReferrer:'रेफ़रर बाइंड करें (बदला नहीं जा सकता)',inviterPlaceholder:'रेफ़रल कोड दर्ज करें',btnBind:'बाइंड करें',
+    myInviteLink:'मेरा आमंत्रण लिंक',btnCopy:'कॉपी करें',inviteCode:'आमंत्रण कोड',
+    L1Direct:'L1 प्रत्यक्ष',L2Indirect:'L2 अप्रत्यक्ष',L3Indirect:'L3 अप्रत्यक्ष',totalDownline:'कुल डाउनलाइन',referrer:'रेफ़रर',
+    inviteFriend:'दोस्तों को आमंत्रित करें',copyLink:'लिंक कॉपी करें',linkCopied:'आमंत्रण लिंक क्लिपबोर्ड पर कॉपी किया गया',inviteShareHint:'दोस्तों को आमंत्रित करने के लिए अपना विशेष लिंक साझा करें और बहु-स्तरीय रेफ़रल पुरस्कार अर्जित करें',
+    bindReferrerConfirm:'रेफ़रर बाइंडिंग की पुष्टि करें',bindSuccess:'बाइंडिंग सफल',bindFailed:'बाइंडिंग विफल',pleaseConnectFirst:'कृपया पहले वॉलेट कनेक्ट करें',selfReferral:'स्वयं को रेफ़र नहीं कर सकते',referrerAddress:'रेफ़रर पता',confirmBind:'बाइंडिंग की पुष्टि करें',
+    rankTitle:'लीडरबोर्ड',
+    recordStake:'क्लाउड स्टेक',recordDividend:'नोड लाभांश',recordDaily:'दैनिक स्तर बोनस',recordClaim:'आय प्राप्त',
+    modalCancel:'रद्द करें',modalConfirm:'पुष्टि करें',
+  }
+};
+
+const LANG_FLAGS = {
+  'zh-CN': { flag:'🇨🇳', label:'简中' },
+  'zh-TW': { flag:'🇹🇼', label:'繁中' },
+  'en-GB': { flag:'🇬🇧', label:'EN-GB' },
+  'en-US': { flag:'🇺🇸', label:'EN-US' },
+  'ko':    { flag:'🇰🇷', label:'한국어' },
+  'ja':    { flag:'🇯🇵', label:'日本語' },
+  'de':    { flag:'🇩🇪', label:'DE' },
+  'hi':    { flag:'🇮🇳', label:'हिन्दी' },
+};
+
+const SUPPORTED_LANGS = ['zh-CN','zh-TW','en-GB','en-US','ko','ja','de','hi'];
+
+let currentLang = 'zh-CN';
+
+function t(key) {
+  return (LANG[currentLang] && LANG[currentLang][key]) || (LANG['zh-CN'][key]) || key;
+}
+
+function initLang() {
+  // 1. Try localStorage
+  let saved = localStorage.getItem('ur_lang');
+  if (saved && SUPPORTED_LANGS.includes(saved)) {
+    currentLang = saved;
+  } else {
+    // 2. Try navigator.language
+    let nl = (navigator.language || navigator.userLanguage || '').replace('_','-');
+    if (SUPPORTED_LANGS.includes(nl)) currentLang = nl;
+    else if (SUPPORTED_LANGS.includes(nl.split('-')[0])) currentLang = nl.split('-')[0];
+    else currentLang = 'zh-CN';
+  }
+  applyTranslations();
+}
+
+function applyTranslations() {
+  // Update flag/label button
+  const fi = LANG_FLAGS[currentLang];
+  document.getElementById('langFlag').textContent = fi.flag;
+  document.getElementById('langLabel').textContent = fi.label;
+
+  // Update dropdown active state
+  document.querySelectorAll('.lang-option').forEach(opt => {
+    opt.classList.toggle('active', opt.dataset.lang === currentLang);
+  });
+
+  // Update all data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = t(key);
+    if (val !== undefined) el.textContent = val;
+  });
+
+  // Update placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+
+  // Update wallet button
+  updateWalletButtonText();
+  // Update countdown
+  updateCountdown();
+  // Update ILO display
+  updateILODisplay();
+  // Update tier display
+  updateTierDisplay();
+  // Update all stats
+  updateAllStats();
+  updateInviteLink();
+  // Re-render records
+  renderStakeRecords();
+  renderEarnRecords();
+  // Re-render rank
+  // Update node badge label
+  updateNodeBadgeLabel();
+  // Update earn sub tab labels
+  updateEarnSubTabs();
+
+  // Save to localStorage
+  localStorage.setItem('ur_lang', currentLang);
+}
+
+function toggleLangMenu() {
+  const dd = document.getElementById('langDropdown');
+  const btn = document.getElementById('langBtn');
+  const isOpen = dd.classList.contains('show');
+  if (isOpen) {
+    dd.classList.remove('show');
+    btn.classList.remove('open');
+  } else {
+    dd.classList.add('show');
+    btn.classList.add('open');
+  }
+}
+
+function selectLang(lang) {
+  currentLang = lang;
+  document.getElementById('langDropdown').classList.remove('show');
+  document.getElementById('langBtn').classList.remove('open');
+  applyTranslations();
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  const sw = document.getElementById('langSwitcher');
+  if (sw && !sw.contains(e.target)) {
+    document.getElementById('langDropdown').classList.remove('show');
+    document.getElementById('langBtn').classList.remove('open');
+  }
+});
+
+function updateWalletButtonText() {
+  const btn = document.getElementById('btnWallet');
+  if (!btn) return;
+  if (state.wallet) {
+    btn.textContent = state.wallet.slice(0,6) + '...' + state.wallet.slice(-4);
+  } else {
+    btn.textContent = t('connectWallet');
+  }
+}
+
+function updateNodeBadgeLabel() {
+  const el = document.getElementById('nodeBadgeLabel');
+  if (!el) return;
+  const tObj = tiers[Math.max(0, state.currentTier - 1)];
+  el.textContent = t('nodeLabel') + ' ' + (tObj ? tObj.name : 'V1');
+}
+
+function updateEarnSubTabs() {
+  const tabs = document.querySelectorAll('.sub-tab');
+  if (tabs.length >= 2) {
+    // The active one might have changed, but we need to update textContent
+    // sub-tabs are updated by data-i18n now
+  }
+}
+
+// ============ State ============
+
+const state = {
+  wallet: null,
+  signer: null,
+  provider: null,
+  chainId: null,
+  jsonRpcProvider: null,
+  urPrice: 0,
+  urChange: 0,
+  urVol24: 0,
+  totalSupply: 0,
+  nodeCount: -1,
+  totalBurn: 0,
+  refCount: 0,
+  stakedBalance: 0,
+  currentTier: 0,
+  pendingReward: 0,
+  totalEarned: 0,
+  coefficient: 0,
+  inviterCode: '',
+  myRefCode: '',
+  myRefLink: '',
+  downlineL1: 0,
+  downlineL2: 0,
+  downlineL3: 0,
+  totalDownlineCount: 0,
+  iloRaised: 0,
+  iloHardCap: 5000000,
+  iloParticipants: 0,
+  iloMyAmount: 0,
+  usdtApproved: false,
+  iloStartTime: new Date('2026-07-25T11:00:00+08:00').getTime(),
+  countdownTimer: null,
+};
+
+const CONTRACTS = {
+  USDT: '0x55d398326f99059fF775485246999027B3197955',
+  URILO: '0xd9145CCE52D386f254917e481eB44e9943F39138',
+  URToken: '0x0ADAaF4315032b3a0C937b2C33C7D7C202b21211',
+  PancakeRouter: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
+  WBNB: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+};
+
+const BSC_CHAIN_ID = 56;
+const BSC_RPC = 'https://bsc-dataseed1.binance.org';
+
+const USDT_ABI = [
+  'function approve(address spender, uint256 value) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function balanceOf(address who) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+];
+
+const URILO_ABI = [
+  'function participate(uint256 usdtAmount)',
+  'function hardCap() view returns (uint256)',
+  'function raisedAmount() view returns (uint256)',
+  'function totalRaised() view returns (uint256)',
+  'function userContributions(address) view returns (uint256)',
+  'function participantCount() view returns (uint256)',
+  'function totalParticipants() view returns (uint256)',
+];
+
+const URTOKEN_ABI = [
+  'function stake(uint256 amount)',
+  'function claimReward()',
+  'function stakedBalance(address) view returns (uint256)',
+  'function stakedBalanceOf(address) view returns (uint256)',
+  'function balanceOfStaked(address) view returns (uint256)',
+  'function pendingReward(address) view returns (uint256)',
+  'function getPendingReward(address) view returns (uint256)',
+  'function totalClaimed(address) view returns (uint256)',
+  'function totalRewards(address) view returns (uint256)',
+  'function getTier(address) view returns (uint256)',
+  'function userTier(address) view returns (uint256)',
+  'function getCoefficient(address) view returns (uint256)',
+  'function userCoefficient(address) view returns (uint256)',
+  'function balanceOf(address) view returns (uint256)',
+  'function totalSupply() view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function nodeCount() view returns (uint256)',
+  'function totalNodes() view returns (uint256)',
+  'function getNodeCount() view returns (uint256)',
+  'function activeNodeCount() view returns (uint256)',
+];
+
+const PANCAKE_ROUTER_ABI = [
+  'function getAmountsOut(uint256 amountIn, address[] path) view returns (uint256[])',
+];
+const PANCAKE_ROUTER_ABI_V2 = [
+  'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline) returns (uint256[] amounts)',
+  'function swapExactTokensForTokensSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)',
+  'function getAmountsOut(uint256 amountIn, address[] path) view returns (uint256[] amounts)',
+  'function getAmountsIn(uint256 amountOut, address[] path) view returns (uint256[] amounts)',
+  'function swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline) payable returns (uint256[] amounts)',
+  'function factory() view returns (address)',
+];
+
+// Tier config
+const tiers = [
+  { name: 'V1', personal: 500, downline: 20000, v6: 0 },
+  { name: 'V2', personal: 1500, downline: 60000, v6: 0 },
+  { name: 'V3', personal: 3000, downline: 150000, v6: 0 },
+  { name: 'V4', personal: 6000, downline: 300000, v6: 0 },
+  { name: 'V5', personal: 8000, downline: 600000, v6: 0 },
+  { name: 'V6', personal: 15000, downline: 1200000, v6: 0 },
+  { name: '永恒V1', personal: 30000, downline: 3000000, v6: 1 },
+  { name: '永恒V2', personal: 60000, downline: 10000000, v6: 3 },
+];
+
+// ============ Chain Data Loading (No Wallet Required) ============
+function initJsonRpc() {
+  state.jsonRpcProvider = new ethers.providers.JsonRpcProvider(BSC_RPC);
+}
+
+async function loadChainPrice() {
+  try {
+    const router = new ethers.Contract(CONTRACTS.PancakeRouter, PANCAKE_ROUTER_ABI, state.jsonRpcProvider);
+    const usdtDecimals = 18;
+    const oneUSDT = ethers.utils.parseUnits('1', usdtDecimals);
+    const path = [CONTRACTS.USDT, CONTRACTS.WBNB, CONTRACTS.URToken];
+    const amounts = await router.getAmountsOut(oneUSDT, path);
+    const urAmount = parseFloat(ethers.utils.formatEther(amounts[amounts.length - 1]));
+    state.urPrice = urAmount > 0 ? 1 / urAmount : 0;
+  } catch (e) {
+    console.log('Price load failed:', e.message);
+    state.urPrice = 0;
+  }
+}
+
+async function loadChainTotalSupply() {
+  try {
+    const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+    const supply = await urToken.totalSupply();
+    const dec = await urToken.decimals();
+    state.totalSupply = parseFloat(ethers.utils.formatUnits(supply, dec));
+  } catch (e) {
+    console.log('TotalSupply load failed:', e.message);
+    state.totalSupply = -1;
+  }
+}
+
+async function loadChainNodeCount() {
+  const nodeFuncs = ['nodeCount', 'totalNodes', 'getNodeCount', 'activeNodeCount'];
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  for (const fn of nodeFuncs) {
+    try {
+      const result = await urToken[fn]();
+      state.nodeCount = result.toNumber();
+      return;
+    } catch (e) {
+      continue;
+    }
+  }
+  state.nodeCount = -1;
+}
+
+async function loadChainTotalBurn() {
+  try {
+    const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+    const deadBalance = await urToken.balanceOf('0x000000000000000000000000000000000000dEaD');
+    const dec = await urToken.decimals();
+    state.totalBurn = parseFloat(ethers.utils.formatUnits(deadBalance, dec));
+  } catch (e) {
+    console.log('TotalBurn load failed:', e.message);
+    state.totalBurn = -1;
+  }
+}
+
+async function loadChainILOData() {
+  const ilo = new ethers.Contract(CONTRACTS.URILO, URILO_ABI, state.jsonRpcProvider);
+  const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.jsonRpcProvider);
+  const decimals = await usdt.decimals();
+
+  // hardCap
+  try {
+    const hc = await ilo.hardCap();
+    state.iloHardCap = parseFloat(ethers.utils.formatUnits(hc, decimals));
+  } catch (e) { console.log('hardCap failed:', e.message); state.iloHardCap = 5000000; }
+
+  // raisedAmount / totalRaised
+  try {
+    let raised;
+    try { raised = await ilo.totalRaised(); } catch (e) { raised = await ilo.raisedAmount(); }
+    state.iloRaised = parseFloat(ethers.utils.formatUnits(raised, decimals));
+  } catch (e) { console.log('raisedAmount failed:', e.message); state.iloRaised = 0; }
+
+  // participantCount / totalParticipants
+  try {
+    let pc;
+    try { pc = await ilo.totalParticipants(); } catch (e) { pc = await ilo.participantCount(); }
+    state.iloParticipants = pc.toNumber();
+  } catch (e) { console.log('participantCount failed:', e.message); state.iloParticipants = 0; }
+}
+
+
+async function loadUserStakedBalance() {
+  if (!state.wallet) return;
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  const funcs = ['stakedBalance', 'stakedBalanceOf', 'balanceOfStaked'];
+  for (const fn of funcs) {
+    try {
+      const result = await urToken[fn](state.wallet);
+      const dec = await urToken.decimals();
+      state.stakedBalance = parseFloat(ethers.utils.formatUnits(result, dec));
+      return;
+    } catch (e) { continue; }
+  }
+  state.stakedBalance = 0;
+}
+
+async function loadUserPendingReward() {
+  if (!state.wallet) return;
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  const funcs = ['pendingReward', 'getPendingReward'];
+  for (const fn of funcs) {
+    try {
+      const result = await urToken[fn](state.wallet);
+      const dec = await urToken.decimals();
+      state.pendingReward = parseFloat(ethers.utils.formatUnits(result, dec));
+      return;
+    } catch (e) { continue; }
+  }
+  state.pendingReward = 0;
+}
+
+async function loadUserTotalEarned() {
+  if (!state.wallet) return;
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  const funcs = ['totalClaimed', 'totalRewards'];
+  for (const fn of funcs) {
+    try {
+      const result = await urToken[fn](state.wallet);
+      const dec = await urToken.decimals();
+      state.totalEarned = parseFloat(ethers.utils.formatUnits(result, dec));
+      return;
+    } catch (e) { continue; }
+  }
+  state.totalEarned = 0;
+}
+
+async function loadUserTier() {
+  if (!state.wallet) return;
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  const funcs = ['getTier', 'userTier'];
+  for (const fn of funcs) {
+    try {
+      const result = await urToken[fn](state.wallet);
+      state.currentTier = result.toNumber();
+      return;
+    } catch (e) { continue; }
+  }
+  state.currentTier = 0;
+}
+
+async function loadUserCoefficient() {
+  if (!state.wallet) return;
+  const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+  const funcs = ['getCoefficient', 'userCoefficient'];
+  for (const fn of funcs) {
+    try {
+      const result = await urToken[fn](state.wallet);
+      state.coefficient = result.toNumber();
+      return;
+    } catch (e) { continue; }
+  }
+  state.coefficient = 0;
+}
+
+async function loadAllUserChainData() {
+  if (!state.wallet) return;
+  await Promise.all([
+    loadUserStakedBalance(),
+    loadUserPendingReward(),
+    loadUserTotalEarned(),
+    loadUserTier(),
+    loadUserCoefficient(),
+  ]);
+  updateAllStats();
+  updateTierDisplay();
+  renderTierSteps();
+}
+
+async function loadAllChainData() {
+  await Promise.all([
+    loadChainPrice(),
+    loadChainTotalSupply(),
+    loadChainNodeCount(),
+    loadChainTotalBurn(),
+    loadChainILOData(),
+  ]);
+  // refCount stays 0 for now
+  state.refCount = 0;
+  // volume stays 0 (marked as --)
+  state.urVol24 = -1;
+  updateAllStats();
+  updateILODisplay();
+  if (state.wallet) {
+    loadAllUserChainData();
+    updateInviteLink();
+  }
+}
+
+// ============ Wallet-connected ILO data refresh ============
+async function loadILOData() {
+  if (!state.signer || state.chainId !== BSC_CHAIN_ID) return;
+  try {
+    const ilo = new ethers.Contract(CONTRACTS.URILO, URILO_ABI, state.signer);
+    const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer);
+    const decimals = await usdt.decimals();
+
+    try {
+      let raised;
+      try { raised = await ilo.totalRaised(); } catch (e) { raised = await ilo.raisedAmount(); }
+      state.iloRaised = parseFloat(ethers.utils.formatUnits(raised, decimals));
+    } catch (e) {}
+
+    try {
+      const hc = await ilo.hardCap();
+      state.iloHardCap = parseFloat(ethers.utils.formatUnits(hc, decimals));
+    } catch (e) {}
+
+    try {
+      let pc;
+      try { pc = await ilo.totalParticipants(); } catch (e) { pc = await ilo.participantCount(); }
+      state.iloParticipants = pc.toNumber();
+    } catch (e) {}
+
+    const myContribution = await ilo.userContributions(state.wallet);
+    state.iloMyAmount = parseFloat(ethers.utils.formatUnits(myContribution, decimals));
+    const allowance = await usdt.allowance(state.wallet, CONTRACTS.URILO);
+    state.usdtApproved = allowance.gt(0);
+    updateILODisplay();
+  } catch (e) {
+    console.log('ILO data load skipped:', e.message);
+  }
+}
+
+// ============ ILO Countdown ============
+function updateCountdown() {
+  const now = Date.now();
+  const remaining = state.iloStartTime - now;
+  const el = document.getElementById('iloCountdown');
+  const badge = document.getElementById('iloStatus');
+  if (!el || !badge) return;
+
+  if (remaining <= 0) {
+    el.textContent = t('countdownInProgress');
+    el.style.color = 'var(--success)';
+    badge.textContent = t('countdownInProgress');
+    badge.style.background = 'rgba(34,204,102,0.15)';
+    badge.style.color = 'var(--success)';
+    badge.style.border = '1px solid rgba(34,204,102,0.3)';
+    if (state.countdownTimer) { clearInterval(state.countdownTimer); state.countdownTimer = null; }
+    return;
+  }
+
+  const days = Math.floor(remaining / 86400000);
+  const hours = Math.floor((remaining % 86400000) / 3600000);
+  const mins = Math.floor((remaining % 3600000) / 60000);
+  const secs = Math.floor((remaining % 60000) / 1000);
+  el.textContent = t('countdownPrefix') + ' ' + days + t('countdownDay') + ' ' + String(hours).padStart(2,'0') + ':' + String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+}
+
+function startCountdown() {
+  updateCountdown();
+  state.countdownTimer = setInterval(updateCountdown, 1000);
+}
+
+// ============ ILO Contract Interactions ============
+async function approveUSDT() {
+  if (!state.signer) { showToast('请先连接钱包'); return; }
+  if (state.chainId !== BSC_CHAIN_ID) { showToast('请切换到 BSC 主网'); await switchToBSC(); return; }
+  const amount = parseFloat(document.getElementById('iloAmount').value);
+  if (!amount || isNaN(amount) || amount <= 0) { showToast('请输入有效金额'); return; }
+  try {
+    const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer);
+    const decimals = await usdt.decimals();
+    const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+    const allowance = await usdt.allowance(state.wallet, CONTRACTS.URILO);
+    if (allowance.gte(parsedAmount)) {
+      state.usdtApproved = true;
+      document.getElementById('btnApprove').disabled = true;
+      document.getElementById('btnParticipate').disabled = false;
+      showToast('USDT 已授权，可直接参与共筑');
+      return;
+    }
+    const tx = await usdt.approve(CONTRACTS.URILO, parsedAmount);
+    showToast('授权交易已提交，等待确认...');
+    await tx.wait();
+    state.usdtApproved = true;
+    document.getElementById('btnApprove').disabled = true;
+    document.getElementById('btnParticipate').disabled = false;
+    showToast('USDT 授权成功！');
+  } catch (e) {
+    console.error(e);
+    if (e.message.includes('user rejected')) showToast('授权已取消');
+    else showToast('授权失败: ' + (e.reason || e.message).slice(0, 60));
+  }
+}
+
+async function participateILO() {
+  if (!state.signer) { showToast('请先连接钱包'); return; }
+  if (state.chainId !== BSC_CHAIN_ID) { showToast('请切换到 BSC 主网'); await switchToBSC(); return; }
+  const amount = parseFloat(document.getElementById('iloAmount').value);
+  if (!amount || isNaN(amount) || amount < 100) { showToast('最低参与 100 USDT'); return; }
+  showModal(
+    '确认参与 ILO 共筑',
+    `<p>参与金额: <strong style="color:#FFCC44;">${amount} USDT</strong></p>
+     <p style="font-size:11px; color:#706060;"><span data-i18n="iloEstimated">预计获得</span>: <strong style="color:#00CCFF;">${(amount * 120).toLocaleString()} UR</strong><br>
+     合约: ${CONTRACTS.URILO.slice(0,10)}...${CONTRACTS.URILO.slice(-8)}<br>
+     BSC 主网 | 资金模型: 80% LP / 20% 团队</p>`,
+    async () => {
+      hideModal();
+      try {
+        const ilo = new ethers.Contract(CONTRACTS.URILO, URILO_ABI, state.signer);
+        const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer);
+        const decimals = await usdt.decimals();
+        const parsedAmount = ethers.utils.parseUnits(amount, decimals);
+        const tx = await ilo.participate(parsedAmount);
+        showToast('交易已提交，等待确认...');
+        await tx.wait();
+        state.iloMyAmount += parseFloat(amount);
+        state.iloRaised += parseFloat(amount);
+        state.iloParticipants++;
+        updateILODisplay();
+        showToast(`成功参与 ${amount} USDT 共筑！`);
+      } catch (e) {
+        console.error(e);
+        if (e.message.includes('user rejected')) showToast('交易已取消');
+        else showToast('参与失败: ' + (e.reason || e.message).slice(0, 60));
+      }
+    }
+  );
+}
+
+function updateILODisplay() {
+  const pct = state.iloHardCap > 0 ? Math.min(100, (state.iloRaised / state.iloHardCap) * 100) : 0;
+  document.getElementById('iloProgressText').textContent = 
+    state.iloRaised.toLocaleString() + ' / ' + state.iloHardCap.toLocaleString() + ' USDT';
+  document.getElementById('iloProgressBar').style.width = pct + '%';
+  document.getElementById('iloParticipants').textContent = state.iloParticipants.toLocaleString();
+  
+  if (state.iloMyAmount > 0) {
+    document.getElementById('iloMyContribution').style.display = 'block';
+    document.getElementById('iloMyAmount').textContent = state.iloMyAmount.toLocaleString() + ' USDT';
+    document.getElementById('iloMyUR').textContent = (state.iloMyAmount * 120).toLocaleString() + ' UR';
+  }
+  if (state.usdtApproved) {
+    document.getElementById('btnApprove').disabled = true;
+    document.getElementById('btnParticipate').disabled = false;
+  }
+}
+
+// ============ Init ============
+function init() {
+  initJsonRpc();
+  tryAutoConnect();
+  loadAllChainData();
+  startCountdown();
+  handleRefParam();
+  updateAllStats();
+  renderTierSteps();
+  renderStakeRecords();
+  renderEarnRecords();
+  updateILODisplay();
+  if (state.myRefCode) {
+    document.getElementById('bindReferrer').style.display = 'none';
+    document.getElementById('myReferral').style.display = 'block';
+    document.getElementById('myRefLink').textContent = state.myRefLink;
+    document.getElementById('myRefCode').textContent = state.myRefCode;
+    document.getElementById('myWalletLink').textContent = 'https://urtoken.uk/?ref=' + (state.wallet || '0x164D57cE9b48d58Bb3E8Bc4F637253be9a2F377e');
+    document.getElementById('boundReferrer').textContent = state.inviterCode;
+    updateDownlineStats();
+  }
+}
+
+// ============ Navigation ============
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + tab);
+  if (page) page.classList.add('active');
+  const navBtn = document.querySelector(`[data-tab="${tab}"]`);
+  if (navBtn) navBtn.classList.add('active');
+  if (tab === 'stake') updateTierDisplay();
+}
+
+// ============ Wallet (Real MetaMask) ============
+async function connectWallet() {
+  if (state.wallet) {
+    state.wallet = null; state.signer = null; state.provider = null;
+    document.getElementById('btnWallet').textContent = t('connectWallet');
+    document.getElementById('btnWallet').classList.remove('connected'); updateWalletButtonText();
+    state.usdtApproved = false;
+    document.getElementById('btnApprove').disabled = false;
+    document.getElementById('btnParticipate').disabled = true;
+    updateInviteLink();
+    return;
+  }
+  if (!window.ethereum) {
+    showToast('请安装 MetaMask 钱包');
+    window.open('https://metamask.io/download/', '_blank');
+    return;
+  }
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const accounts = await provider.send('eth_requestAccounts', []);
+    const network = await provider.getNetwork();
+    state.provider = provider;
+    state.signer = provider.getSigner();
+    state.wallet = accounts[0];
+    state.chainId = network.chainId;
+    const short = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+    document.getElementById('btnWallet').textContent = short;
+    document.getElementById('btnWallet').classList.add('connected');
+    if (network.chainId !== BSC_CHAIN_ID) {
+      showToast('请切换到 BSC 主网');
+      await switchToBSC();
+    }
+    loadILOData();
+    loadAllUserChainData();
+    updateInviteLink();
+    updatePublishButton();
+    listenToNetwork();
+    handleRefParam();
+  } catch (e) {
+    console.error(e);
+    showToast('连接失败: ' + (e.message || '用户拒绝'));
+  }
+}
+
+async function tryAutoConnect() {
+  if (!window.ethereum) return;
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+    if (accounts && accounts.length > 0) {
+      await finishAutoConnect(accounts[0]);
+      return;
+    }
+    const reqAccounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (reqAccounts && reqAccounts.length > 0) {
+      await finishAutoConnect(reqAccounts[0]);
+    }
+  } catch (e) {
+    // silent fail on auto-connect
+  }
+}
+
+async function finishAutoConnect(account) {
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const network = await provider.getNetwork();
+  state.provider = provider;
+  state.signer = provider.getSigner();
+  state.wallet = account;
+  state.chainId = network.chainId;
+  const short = account.slice(0, 6) + '...' + account.slice(-4);
+  document.getElementById('btnWallet').textContent = short;
+  document.getElementById('btnWallet').classList.add('connected');
+  updateWalletButtonText();
+  if (network.chainId !== BSC_CHAIN_ID) {
+    showToast('请切换到 BSC 主网');
+    await switchToBSC();
+  }
+  loadILOData();
+  loadAllUserChainData();
+  updateInviteLink();
+  updatePublishButton();
+  listenToNetwork();
+  handleRefParam();
+}
+
+async function switchToBSC() {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x38' }],
+    });
+  } catch (e) {
+    if (e.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x38',
+          chainName: 'BNB Smart Chain',
+          nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+          rpcUrls: [BSC_RPC],
+          blockExplorerUrls: ['https://bscscan.com'],
+        }],
+      });
+    }
+  }
+}
+
+function _handleChainChanged() {
+  window.location.reload();
+}
+function _handleAccountsChanged(accounts) {
+  if (accounts.length === 0) {
+    state.wallet = null; state.signer = null;
+    document.getElementById('btnWallet').textContent = t('connectWallet');
+    document.getElementById('btnWallet').classList.remove('connected'); updateWalletButtonText();
+  } else {
+    finishAutoConnect(accounts[0]);
+  }
+}
+function listenToNetwork() {
+  window.ethereum.removeListener('chainChanged', _handleChainChanged);
+  window.ethereum.removeListener('accountsChanged', _handleAccountsChanged);
+  window.ethereum.on('chainChanged', _handleChainChanged);
+  window.ethereum.on('accountsChanged', _handleAccountsChanged);
+}
+
+// ============ Staking (Real Contract) ============
+async function doStake() {
+  if (!state.signer) { showToast('请先连接钱包'); return; }
+  if (state.chainId !== BSC_CHAIN_ID) { showToast('请切换到 BSC 主网'); await switchToBSC(); return; }
+  const amount = parseFloat(document.getElementById('stakeAmount').value);
+  if (!amount || isNaN(amount) || amount <= 0) { showToast('请输入有效的UR数量'); return; }
+  showModal(
+    '确认云托管',
+    `<p>您即将托管 <strong style="color:#FFCC44;">${amount} UR</strong> 到云算力合约。</p>
+     <p style="font-size:11px; color:#706060;">合约: ${CONTRACTS.URToken.slice(0,10)}...${CONTRACTS.URToken.slice(-8)}<br>BSC 主网 | 托管后自动获得节点分红资格。</p>`,
+    async () => {
+      hideModal();
+      try {
+        const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.signer);
+        const parsedAmount = ethers.utils.parseEther(amount);
+        const tx = await urToken.stake(parsedAmount);
+        showToast('交易已提交，等待确认...');
+        await tx.wait();
+        state.stakedBalance += parseFloat(amount);
+        updateAllStats(); updateTierDisplay(); renderStakeRecords();
+        showToast(`成功托管 ${amount} UR！`);
+      } catch (e) {
+        console.error(e);
+        if (e.message.includes('user rejected')) showToast('交易已取消');
+        else showToast('托管失败: ' + (e.reason || e.message).slice(0, 60));
+      }
+    }
+  );
+}
+
+// ============ Claim (Real Contract) ============
+async function doClaimAll() {
+  if (!state.signer) { showToast('请先连接钱包'); return; }
+  if (state.chainId !== BSC_CHAIN_ID) { showToast('请切换到 BSC 主网'); await switchToBSC(); return; }
+  if (state.pendingReward <= 0) { showToast('暂无<span data-i18n="pendingReward">待领取</span>收益'); return; }
+  showModal(
+    '确认领取收益',
+    `<p>您即将领取 <strong style="color:#FFCC44;">${state.pendingReward.toFixed(2)} UR</strong></p>
+     <p style="font-size:11px; color:#706060;">合约: ${CONTRACTS.URToken.slice(0,10)}...${CONTRACTS.URToken.slice(-8)}<br>BSC 主网 | 含节点分红 + 等级日奖励</p>`,
+    async () => {
+      hideModal();
+      try {
+        const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.signer);
+        const tx = await urToken.claimReward();
+        showToast('交易已提交，等待确认...');
+        await tx.wait();
+        const claimed = state.pendingReward;
+        state.totalEarned += state.pendingReward;
+        state.pendingReward = 0;
+        updateAllStats(); renderEarnRecords();
+        showToast(`成功领取 ${claimed.toFixed(2)} UR！`);
+      } catch (e) {
+        console.error(e);
+        if (e.message.includes('user rejected')) showToast('交易已取消');
+        else showToast('领取失败: ' + (e.reason || e.message).slice(0, 60));
+      }
+    }
+  );
+}
+
+// ============ Modal Helpers ============
+let _bindModalActive = false;
+
+function showModal(title, body, onConfirm, onCancel) {
+  document.getElementById('modalContent').innerHTML = `
+    <h3>${title}</h3>
+    ${body}
+    <div class="modal-btns">
+      <button class="btn-cancel" id="modalCancelBtn">取消</button>
+      <button class="btn-confirm" id="modalConfirmBtn">确认</button>
+    </div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  document.getElementById('modalConfirmBtn').onclick = onConfirm;
+  document.getElementById('modalCancelBtn').onclick = onCancel || hideModal;
+}
+function hideModal() {
+  if (_bindModalActive) return;
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (_bindModalActive) return;
+  if (e.target === this) hideModal();
+});
+
+function showRefBindModal(refAddr, short) {
+  _bindModalActive = true;
+  document.getElementById('modalContent').innerHTML = `
+    <h3>` + t('bindReferrerConfirm') + `</h3>
+    <p style="font-size:14px; color:#D0C0C0; margin-bottom:16px; line-height:1.6;">
+      推荐人 <strong style="color:#FFCC44;">${short}</strong> 将永久绑定，不可撤销
+    </p>
+    <div class="modal-btns">
+      <button class="btn-confirm" id="modalConfirmBtn" style="background:#FFCC44; color:#1a1a2e;">确认</button>
+    </div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+  document.getElementById('modalConfirmBtn').onclick = async () => {
+    await doOnchainBind(refAddr);
+    hideBindModal();
+  };
+}
+
+function hideBindModal() {
+  _bindModalActive = false;
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+// ============ Toast ============
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ============ Stats Update ============
+function formatVal(value, decimals, suffix) {
+  if (value < 0) return '--';
+  return (value / Math.pow(10, decimals || 0)).toFixed(suffix ? undefined : 1) + (suffix || '');
+}
+
+function updateAllStats() {
+  // UR Price
+  if (state.urPrice > 0) {
+    document.getElementById('urPrice').textContent = '$' + state.urPrice.toFixed(4);
+  } else {
+    document.getElementById('urPrice').textContent = '--';
+  }
+  document.getElementById('urChange').textContent = '--';
+  document.getElementById('urChange').style.color = 'var(--text-dim)';
+
+  // 24h Volume - always --
+  document.getElementById('urVol24').textContent = '--';
+
+  // Total Supply
+  if (state.totalSupply >= 0) {
+    document.getElementById('totalSupply').textContent = (state.totalSupply / 1e6).toFixed(1) + 'M';
+  } else {
+    document.getElementById('totalSupply').textContent = '--';
+  }
+
+  // Node Count
+  if (state.nodeCount >= 0) {
+    document.getElementById('nodeCount').textContent = state.nodeCount.toLocaleString();
+  } else {
+    document.getElementById('nodeCount').textContent = '--';
+  }
+
+  // Total Burn
+  if (state.totalBurn >= 0) {
+    document.getElementById('totalBurn').textContent = (state.totalBurn / 1e6).toFixed(1) + 'M';
+  } else {
+    document.getElementById('totalBurn').textContent = '--';
+  }
+
+  // Ref Count
+  document.getElementById('refCount').textContent = '0';
+
+  // Staking
+  document.getElementById('stakedBalance').textContent = state.stakedBalance.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  const usdVal = (state.stakedBalance * state.urPrice).toLocaleString('en-US', {minimumFractionDigits:2});
+  document.getElementById('stakedUSD').textContent = '$' + usdVal;
+  document.getElementById('pendingReward').textContent = state.pendingReward.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  document.getElementById('totalEarned').textContent = state.totalEarned.toLocaleString('en-US', {minimumFractionDigits:2}) + ' UR';
+  updateTierDisplay();
+}
+
+// ============ Tier Display ============
+function updateTierDisplay() {
+  const t = tiers[Math.max(0, state.currentTier - 1)];
+  const isEternal = state.currentTier >= 7;
+  document.getElementById('nodeBadgeIcon').textContent = t ? t.name : 'V1';
+  document.getElementById('nodeBadgeIcon').className = 'node-badge-icon' + (isEternal ? ' eternal' : '');
+  document.getElementById('nodeBadgeLabel').textContent = t('nodeLabel') + ' ' + (t ? t.name : 'V1');
+
+  const stakedUSD = state.stakedBalance * state.urPrice;
+  document.getElementById('nodeEquivalent').textContent = '$' + stakedUSD.toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('nodeDownline').textContent = '$' + ((t ? t.downline : 20000) * 0.9).toLocaleString('en-US', {maximumFractionDigits:0});
+  document.getElementById('nodeV6Count').textContent = state.currentTier >= 7 ? (state.currentTier === 7 ? '1' : '4') : '0';
+  document.getElementById('nodeCoeff').textContent = state.coefficient + '%';
+
+  if (state.currentTier < 8) {
+    const next = tiers[state.currentTier];
+    document.getElementById('nextTierName').textContent = next.name;
+    const personalPct = Math.min(100, (stakedUSD / next.personal) * 100);
+    const downlinePct = Math.min(100, (((t ? t.downline : 20000) * 0.9) / next.downline) * 100);
+    document.getElementById('tierPersonalProgress').textContent = '$' + stakedUSD.toLocaleString('en-US', {maximumFractionDigits:0}) + ' / $' + next.personal.toLocaleString();
+    document.getElementById('tierDownlineProgress').textContent = '$' + ((t ? t.downline : 20000) * 0.9).toLocaleString('en-US', {maximumFractionDigits:0}) + ' / $' + next.downline.toLocaleString();
+    document.getElementById('tierPersonalBar').style.width = personalPct + '%';
+    document.getElementById('tierDownlineBar').style.width = downlinePct + '%';
+  } else {
+    document.getElementById('nextTierName').textContent = t('tierMaxed');
+    document.getElementById('tierPersonalProgress').textContent = t('tierDone');
+    document.getElementById('tierDownlineProgress').textContent = t('tierDone');
+    document.getElementById('tierPersonalBar').style.width = '100%';
+    document.getElementById('tierDownlineBar').style.width = '100%';
+  }
+}
+
+function renderTierSteps() {
+  const container = document.getElementById('tierSteps');
+  let html = '';
+  tiers.forEach((t, i) => {
+    let cls = 'tier-step';
+    if (i < state.currentTier) cls += ' done';
+    else if (i === state.currentTier) cls += ' current';
+    if (i >= 6) cls += ' eternal';
+    html += `<div class="${cls}">${t.name.replace('永恒','E')}</div>`;
+  });
+  container.innerHTML = html;
+}
+
+// ============ Records ============
+function renderStakeRecords() {
+  const records = [
+    { type: t('recordStake'), time: '2026-07-18 14:30', amount: '+2,000.00 UR', cls: 'positive' },
+    { type: t('recordStake'), time: '2026-07-15 09:15', amount: '+5,000.00 UR', cls: 'positive' },
+    { type: t('recordStake'), time: '2026-07-10 16:45', amount: '+8,000.00 UR', cls: 'positive' },
+    { type: t('recordDividend'), time: '2026-07-17 00:00', amount: '+320.50 UR', cls: 'positive' },
+    { type: t('recordDaily'), time: '2026-07-17 00:00', amount: '+185.20 UR', cls: 'positive' },
+  ];
+  document.getElementById('stakeRecords').innerHTML = records.map(r => `
+    <div class="record-item">
+      <div class="record-left"><div class="record-type">${r.type}</div><div class="record-time">${r.time}</div></div>
+      <div class="record-right"><div class="record-amount ${r.cls}">${r.amount}</div></div>
+    </div>`).join('');
+}
+
+function renderEarnRecords() {
+  const records = [
+    { type: t('recordDividend'), time: '2026-07-18', amount: '+310.80 UR', cls: 'positive' },
+    { type: t('recordDaily'), time: '2026-07-18', amount: '+175.40 UR', cls: 'positive' },
+    { type: t('recordDividend'), time: '2026-07-17', amount: '+320.50 UR', cls: 'positive' },
+    { type: t('recordDaily'), time: '2026-07-17', amount: '+185.20 UR', cls: 'positive' },
+    { type: t('recordDividend'), time: '2026-07-16', amount: '+298.30 UR', cls: 'positive' },
+    { type: t('recordClaim'), time: '2026-07-15', amount: '-2,500.00 UR', cls: 'negative' },
+  ];
+  document.getElementById('earnRecords').innerHTML = records.map(r => `
+    <div class="record-item">
+      <div class="record-left"><div class="record-type">${r.type}</div><div class="record-time">${r.time}</div></div>
+      <div class="record-right"><div class="record-amount ${r.cls}">${r.amount}</div></div>
+    </div>`).join('');
+}
+
+// ============ Earn Sub Tabs ============
+function switchEarnSub(idx) {
+  document.querySelectorAll('.sub-tab').forEach((b, i) => b.classList.toggle('active', i === idx));
+  document.getElementById('earnDividendDetail').style.display = idx === 0 ? 'block' : 'none';
+  document.getElementById('earnDailyDetail').style.display = idx === 1 ? 'block' : 'none';
+}
+
+// ============ Referral System ============
+function bindReferrer() {
+  const code = document.getElementById('inviterCode').value.trim();
+  if (!code) { showToast('请输入推荐人邀请码'); return; }
+  showModal(
+    '确认绑定推荐人',
+    `<p>您即将绑定推荐人 <strong style="color:#FFCC44;">${code}</strong></p>
+     <p style="font-size:11px; color:#706060;">绑定后不可更改，推荐关系将写入链上。<br>确认后将自动生成您的专属邀请链接。</p>`,
+    () => {
+      state.inviterCode = code;
+      state.myRefCode = 'UR' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      state.myRefLink = `https://ur.agent/ref?code=${state.myRefCode}`;
+      state.downlineL1 = Math.floor(Math.random() * 8) + 3;
+      state.downlineL2 = Math.floor(Math.random() * 50) + 20;
+      state.downlineL3 = Math.floor(Math.random() * 200) + 100;
+      document.getElementById('bindReferrer').style.display = 'none';
+      document.getElementById('myReferral').style.display = 'block';
+      document.getElementById('myRefLink').textContent = state.myRefLink;
+      document.getElementById('myRefCode').textContent = state.myRefCode;
+      updateInviteLink();
+      document.getElementById('myWalletLink').textContent = 'https://urtoken.uk/?ref=' + (state.wallet || '0x164D57cE9b48d58Bb3E8Bc4F637253be9a2F377e');
+      document.getElementById('boundReferrer').textContent = state.inviterCode;
+      updateDownlineStats();
+      state.totalDownlineCount = state.downlineL1 + state.downlineL2 + state.downlineL3;
+      document.getElementById('totalDownline').textContent = state.totalDownlineCount.toLocaleString();
+      document.getElementById('refCount').textContent = state.totalDownlineCount.toLocaleString();
+      hideModal();
+      showToast('推荐关系绑定成功！邀请链接已生成');
+    }
+  );
+}
+
+function updateDownlineStats() {
+  document.getElementById('downlineL1').textContent = state.downlineL1;
+  document.getElementById('downlineL2').textContent = state.downlineL2;
+  document.getElementById('downlineL3').textContent = state.downlineL3;
+  state.totalDownlineCount = state.downlineL1 + state.downlineL2 + state.downlineL3;
+  document.getElementById('totalDownline').textContent = state.totalDownlineCount.toLocaleString();
+}
+
+function copyRefLink() {
+  navigator.clipboard.writeText(state.myRefLink).then(() => {
+    showToast('邀请链接已复制到剪贴板');
+  }).catch(() => {
+    showToast('复制失败，请手动复制');
+  });
+}
+
+function copyWalletLink() {
+  const link = document.getElementById('myWalletLink').textContent;
+  if (!link || link === '--') return;
+  navigator.clipboard.writeText(link).then(() => {
+    showToast(t('linkCopied'));
+  }).catch(() => {
+    showToast('复制失败，请手动复制');
+  });
+}
+
+
+function updateInviteLink() {
+  const addr = state.wallet || '0x164D57cE9b48d58Bb3E8Bc4F637253be9a2F377e';
+  const link = 'https://urtoken.uk/?ref=' + addr;
+  document.getElementById('inviteLinkText').textContent = link;
+}
+
+function copyInviteLink() {
+  const text = document.getElementById('inviteLinkText').textContent;
+  if (!text || text === '--') return;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(t('linkCopied'));
+  }).catch(() => {
+    showToast('复制失败，请手动复制');
+  });
+}
+
+
+// ============ Referral URL Handler ============
+const REF_REJECTED_KEY = 'ur_ref_rejected';
+const REF_HANDLED_KEY = 'ur_ref_handled';
+
+function getRefFromUrl() {
+  const m = window.location.search.match(/[?&]ref=([0-9a-fA-Fx]{40,42})/);
+  return m ? m[1] : null;
+}
+
+function handleRefParam() {
+  const refAddr = getRefFromUrl();
+  if (!refAddr) return;
+  if (!state.wallet) return;
+  if (!state.signer) return;
+  if (state.inviterCode && state.inviterCode !== '') return;
+  if (state.myRefCode && state.myRefCode !== '') return;
+  if (refAddr.toLowerCase() === state.wallet.toLowerCase()) return;
+  if (sessionStorage.getItem(REF_HANDLED_KEY) === refAddr.toLowerCase()) return;
+
+  const short = refAddr.slice(0, 6) + '...' + refAddr.slice(-4);
+  showRefBindModal(refAddr, short);
+}
+
+async function doOnchainBind(refAddr) {
+  if (!state.signer) {
+    showToast('请先连接钱包');
+    return;
+  }
+  try {
+    const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.signer);
+    const bindFns = [
+      'setReferrer', 'bindReferrer', 'setReferral', 'bindReferral',
+      'registerReferrer', 'registerReferral', 'addReferral',
+      'setUpline', 'bindUpline', 'setInviter'
+    ];
+    let tx = null;
+    let lastErr = null;
+    for (const fn of bindFns) {
+      try {
+        tx = await urToken[fn](refAddr, { gasLimit: 250000 });
+        if (tx.wait) break;
+      } catch (e) {
+        lastErr = e;
+        continue;
+      }
+    }
+    if (!tx) {
+      const errDetail = lastErr ? (lastErr.reason || lastErr.message || '').slice(0, 80) : '未知错误';
+      showToast('绑定失败: 合约不支持绑定推荐人 (' + errDetail + ')');
+      return;
+    }
+    await tx.wait();
+    state.inviterCode = refAddr;
+    state.myRefCode = 'UR' + Math.random().toString(36).slice(2, 8).toUpperCase();
+    state.myRefLink = 'https://ur.agent/ref?code=' + state.myRefCode;
+    state.downlineL1 = 0; state.downlineL2 = 0; state.downlineL3 = 0;
+    document.getElementById('bindReferrer').style.display = 'none';
+    document.getElementById('myReferral').style.display = 'block';
+    document.getElementById('myRefLink').textContent = state.myRefLink;
+    document.getElementById('myRefCode').textContent = state.myRefCode;
+    document.getElementById('myWalletLink').textContent = 'https://urtoken.uk/?ref=' + state.wallet;
+    document.getElementById('boundReferrer').textContent = shortAddr(refAddr);
+    updateDownlineStats();
+    state.totalDownlineCount = 0;
+    document.getElementById('totalDownline').textContent = '0';
+    document.getElementById('refCount').textContent = '0';
+    sessionStorage.setItem(REF_HANDLED_KEY, refAddr.toLowerCase());
+    showToast(t('bindSuccess'));
+  } catch (e) {
+    console.error(e);
+    const msg = e.reason || e.message || '';
+    if (/user\s*rejected/i.test(msg)) {
+      showToast('绑定失败: 用户取消交易');
+    } else if (/insufficient\s*funds/i.test(msg)) {
+      showToast('绑定失败: Gas 不足，请充值 BNB');
+    } else {
+      showToast('绑定失败: ' + (msg.slice(0, 60) || '未知错误'));
+    }
+  }
+}
+
+function shortAddr(addr) {
+  return addr.slice(0, 6) + '...' + addr.slice(-4);
+}
+
+
+// ============ Announcement Board ============
+const ANNOUNCE_STORAGE_KEY = 'ur_announcements';
+const ANNOUNCE_MAX = 20;
+const ANNOUNCE_POLL_INTERVAL = 30000;
+let announcePollTimer = null;
+
+function getAnnouncements() {
+  try {
+    const raw = localStorage.getItem(ANNOUNCE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function saveAnnouncements(list) {
+  localStorage.setItem(ANNOUNCE_STORAGE_KEY, JSON.stringify(list.slice(0, ANNOUNCE_MAX)));
+}
+
+function renderAnnouncements() {
+  const list = getAnnouncements();
+  const container = document.getElementById('announceList');
+  if (!container) return;
+  if (list.length === 0) {
+    container.innerHTML = '<div class="announce-empty">暂无公告</div>';
+    return;
+  }
+  container.innerHTML = list.map(a => {
+    const addr = a.publisher || '0x0000...0000';
+    const shortAddr = addr.length >= 10 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
+    return `<div class="announce-item">
+      <div class="announce-meta">
+        <span class="announce-publisher">${shortAddr}</span>
+        <span class="announce-time">${a.time || ''}</span>
+      </div>
+      <div class="announce-content">${escapeHtml(a.content)}</div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showPublishModal() {
+  document.getElementById('publishModalOverlay').style.display = 'flex';
+  document.getElementById('publishAnnounceText').value = '';
+  document.getElementById('publishCharCount').textContent = '0';
+}
+
+function hidePublishModal() {
+  document.getElementById('publishModalOverlay').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const textarea = document.getElementById('publishAnnounceText');
+  if (textarea) {
+    textarea.addEventListener('input', function() {
+      document.getElementById('publishCharCount').textContent = this.value.length;
+    });
+  }
+  const overlay = document.getElementById('publishModalOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) hidePublishModal();
+    });
+  }
+});
+
+function publishAnnounce() {
+  const text = document.getElementById('publishAnnounceText').value.trim();
+  if (!text) { showToast('请输入公告内容'); return; }
+  if (text.length > 200) { showToast('公告内容不能超过200字'); return; }
+
+  const publisher = state.wallet || '0x0000000000000000000000000000000000000000';
+  const now = new Date();
+  const timeStr = now.getFullYear() + '-' +
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0') + ':' +
+    String(now.getSeconds()).padStart(2, '0');
+
+  const announcement = { publisher, content: text, time: timeStr, timestamp: now.getTime() };
+  const list = getAnnouncements();
+  list.unshift(announcement);
+  saveAnnouncements(list);
+  renderAnnouncements();
+  hidePublishModal();
+  showToast('公告发布成功！');
+}
+
+function updatePublishButton() {
+  const btn = document.getElementById('btnPublishAnnounce');
+  if (!btn) return;
+  btn.style.display = state.wallet ? 'inline-block' : 'none';
+}
+
+function startAnnouncePolling() {
+  renderAnnouncements();
+  updatePublishButton();
+  if (announcePollTimer) clearInterval(announcePollTimer);
+  announcePollTimer = setInterval(renderAnnouncements, ANNOUNCE_POLL_INTERVAL);
+}
+
+// Extend connectWallet to show publish button
+const _origConnectWallet = connectWallet;
+connectWallet = async function() {
+  await _origConnectWallet();
+  updatePublishButton();
+};
+
+// Extend wallet disconnect in connectWallet to hide publish button
+const _origSwitchTab = switchTab;
+switchTab = function(tab) {
+  _origSwitchTab(tab);
+  if (tab === 'social') {
+    renderAnnouncements();
+    updatePublishButton();
+  }
+};
+
+
+
+// ============ Swap State ============
+const swapState = {
+  payToken: 'USDT',
+  receiveToken: 'UR',
+  slippage: 0.5,
+  inputAmount: '',
+  outputAmount: '',
+  usdtDecimals: 18,
+  urDecimals: 18,
+  priceCache: null,
+  debounceTimer: null,
+};
+
+function initSwapPage() {
+  document.getElementById('swapUrPrice').textContent = state.urPrice > 0 ? '$' + state.urPrice.toFixed(4) : '--';
+  document.getElementById('swapRateDisplay').textContent = state.urPrice > 0 ? (1 / state.urPrice).toFixed(2) + ' UR' : '--';
+  swapState.priceCache = state.urPrice;
+}
+
+function onSwapInput() {
+  const val = document.getElementById('swapInputAmount').value;
+  swapState.inputAmount = val;
+  if (swapState.debounceTimer) clearTimeout(swapState.debounceTimer);
+  if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) {
+    document.getElementById('swapOutputAmount').value = '';
+    document.getElementById('swapInfoRate').textContent = '--';
+    document.getElementById('swapInfoMinReceived').textContent = '--';
+    document.getElementById('swapInfoPriceImpact').textContent = '--';
+    updateSwapButton();
+    return;
+  }
+  document.getElementById('swapOutputAmount').value = t('swapCalculating');
+  document.getElementById('swapInfoRate').textContent = t('swapCalculating');
+  swapState.debounceTimer = setTimeout(computeSwapQuote, 500);
+}
+
+async function computeSwapQuote() {
+  const amount = parseFloat(swapState.inputAmount);
+  if (!amount || isNaN(amount) || amount <= 0) return;
+
+  const payToken = swapState.payToken;
+  const receiveToken = swapState.receiveToken;
+  if (payToken === receiveToken) return;
+
+  const payAddr = payToken === 'USDT' ? CONTRACTS.USDT : CONTRACTS.URToken;
+  const receiveAddr = receiveToken === 'USDT' ? CONTRACTS.USDT : CONTRACTS.URToken;
+
+  let bestAmounts = null;
+  const paths = [[payAddr, receiveAddr], [payAddr, CONTRACTS.WBNB, receiveAddr]];
+
+  try {
+    const router = new ethers.Contract(CONTRACTS.PancakeRouter, PANCAKE_ROUTER_ABI_V2, state.jsonRpcProvider);
+
+    // Determine decimals for both tokens
+    let payDecimals = 18;
+    let receiveDecimals = 18;
+    if (payToken === 'USDT') {
+      try { const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.jsonRpcProvider); payDecimals = await usdt.decimals(); } catch(e) { showToast('获取USDT代币信息失败'); return; }
+    }
+    if (receiveToken === 'USDT') {
+      try { const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.jsonRpcProvider); receiveDecimals = await usdt.decimals(); } catch(e) { showToast('获取USDT代币信息失败'); return; }
+    }
+
+    const parsedAmount = ethers.utils.parseUnits(amount.toFixed(payDecimals), payDecimals);
+
+    for (const path of paths) {
+      try {
+        const amounts = await router.getAmountsOut(parsedAmount, path);
+        if (amounts && amounts.length > 1) {
+          const out = parseFloat(ethers.utils.formatUnits(amounts[amounts.length - 1], receiveDecimals));
+          if (bestAmounts === null || out > bestAmounts.outAmount) {
+            bestAmounts = { amounts, outAmount: out, path };
+          }
+        }
+      } catch (e) { continue; }
+    }
+
+    if (bestAmounts) {
+      const outStr = bestAmounts.outAmount.toFixed(6);
+      document.getElementById('swapOutputAmount').value = outStr;
+      swapState.outputAmount = outStr;
+
+      const rate = bestAmounts.outAmount / amount;
+      document.getElementById('swapInfoRate').textContent = '1 ' + payToken + ' = ' + rate.toFixed(4) + ' ' + receiveToken;
+
+      const minReceived = (bestAmounts.outAmount * (1 - swapState.slippage / 100)).toFixed(6);
+      document.getElementById('swapInfoMinReceived').textContent = minReceived + ' ' + receiveToken;
+
+      // Price impact: compare with cached price
+      if (swapState.priceCache && swapState.priceCache > 0 && payToken === 'USDT' && receiveToken === 'UR') {
+        const expectedFromPrice = amount / swapState.priceCache;
+        const impact = Math.abs((expectedFromPrice - bestAmounts.outAmount) / expectedFromPrice * 100);
+        document.getElementById('swapInfoPriceImpact').textContent = impact.toFixed(2) + '%';
+      } else {
+        document.getElementById('swapInfoPriceImpact').textContent = '<0.01%';
+      }
+    } else {
+      document.getElementById('swapOutputAmount').value = '--';
+      document.getElementById('swapInfoRate').textContent = '--';
+    }
+  } catch (e) {
+    console.log('Swap quote failed:', e.message);
+    document.getElementById('swapOutputAmount').value = '--';
+    document.getElementById('swapInfoRate').textContent = '--';
+  }
+  updateSwapButton();
+}
+
+function switchSwapDirection() {
+  const tmp = swapState.payToken;
+  swapState.payToken = swapState.receiveToken;
+  swapState.receiveToken = tmp;
+  document.getElementById('swapPayToken').textContent = swapState.payToken;
+  document.getElementById('swapReceiveToken').textContent = swapState.receiveToken;
+  document.getElementById('swapInputAmount').value = '';
+  document.getElementById('swapOutputAmount').value = '';
+  swapState.inputAmount = '';
+  swapState.outputAmount = '';
+  document.getElementById('swapInfoRate').textContent = '--';
+  document.getElementById('swapInfoMinReceived').textContent = '--';
+  document.getElementById('swapInfoPriceImpact').textContent = '--';
+  updateSwapButton();
+}
+
+function toggleSwapTokenMenu(side) {
+  // For simplicity, just toggle between USDT and UR
+  if (side === 'pay') {
+    swapState.payToken = swapState.payToken === 'USDT' ? 'UR' : 'USDT';
+    document.getElementById('swapPayToken').textContent = swapState.payToken;
+  } else {
+    swapState.receiveToken = swapState.receiveToken === 'USDT' ? 'UR' : 'USDT';
+    document.getElementById('swapReceiveToken').textContent = swapState.receiveToken;
+  }
+  // Ensure tokens are different
+  if (swapState.payToken === swapState.receiveToken) {
+    if (side === 'pay') {
+      swapState.receiveToken = swapState.payToken === 'USDT' ? 'UR' : 'USDT';
+      document.getElementById('swapReceiveToken').textContent = swapState.receiveToken;
+    } else {
+      swapState.payToken = swapState.receiveToken === 'USDT' ? 'UR' : 'USDT';
+      document.getElementById('swapPayToken').textContent = swapState.payToken;
+    }
+  }
+  document.getElementById('swapInputAmount').value = '';
+  document.getElementById('swapOutputAmount').value = '';
+  swapState.inputAmount = '';
+  swapState.outputAmount = '';
+  updateSwapButton();
+}
+
+function setSlippage(val, el) {
+  swapState.slippage = val;
+  document.getElementById('swapInfoSlippage').textContent = val + '%';
+  document.querySelectorAll('.swap-slippage-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  if (swapState.inputAmount) computeSwapQuote();
+}
+
+function updateSwapButton() {
+  const btn = document.getElementById('btnSwap');
+  if (!swapState.inputAmount || parseFloat(swapState.inputAmount) <= 0) {
+    btn.textContent = t('swapEnterAmount');
+    btn.disabled = true;
+  } else {
+    btn.textContent = (swapState.payToken === 'USDT' ? t('swapConfirmSwap') : t('swapConfirmSwap'));
+    btn.disabled = false;
+  }
+}
+
+async function executeSwap() {
+  if (!state.signer) { showToast('请先连接钱包'); return; }
+  if (state.chainId !== BSC_CHAIN_ID) { showToast('请切换到 BSC 主网'); await switchToBSC(); return; }
+
+  const amount = parseFloat(swapState.inputAmount);
+  if (!amount || isNaN(amount) || amount <= 0) { showToast('请输入有效金额'); return; }
+
+  const payToken = swapState.payToken;
+  const receiveToken = swapState.receiveToken;
+  const payAddr = payToken === 'USDT' ? CONTRACTS.USDT : CONTRACTS.URToken;
+  const receiveAddr = receiveToken === 'USDT' ? CONTRACTS.USDT : CONTRACTS.URToken;
+
+  // Get decimals for both tokens
+  let payDecimals = 18;
+  let receiveDecimals = 18;
+  if (payToken === 'USDT') {
+    try { const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer); payDecimals = await usdt.decimals(); } catch(e) { showToast('获取USDT代币信息失败'); return; }
+  }
+  if (receiveToken === 'USDT') {
+    try { const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer); receiveDecimals = await usdt.decimals(); } catch(e) { showToast('获取USDT代币信息失败'); return; }
+  }
+
+  const parsedAmount = ethers.utils.parseUnits(amount.toFixed(payDecimals), payDecimals);
+
+  // Compute path and min out
+  const router = new ethers.Contract(CONTRACTS.PancakeRouter, PANCAKE_ROUTER_ABI_V2, state.signer);
+
+  // Try direct path first
+  let bestAmounts = null;
+  let bestPath = null;
+  const paths = [[payAddr, receiveAddr], [payAddr, CONTRACTS.WBNB, receiveAddr]];
+
+  for (const path of paths) {
+    try {
+      const amounts = await router.getAmountsOut(parsedAmount, path);
+      if (amounts && amounts.length > 1) {
+        const out = parseFloat(ethers.utils.formatUnits(amounts[amounts.length - 1], receiveDecimals));
+        if (bestAmounts === null || out > bestAmounts) {
+          bestAmounts = out;
+          bestPath = path;
+        }
+      }
+    } catch (e) { continue; }
+  }
+
+  if (!bestPath) { showToast('无法找到兑换路径'); return; }
+
+  const minOut = ethers.utils.parseUnits(
+    (bestAmounts * (1 - swapState.slippage / 100)).toFixed(receiveDecimals),
+    receiveDecimals
+  );
+  const deadline = Math.floor(Date.now() / 1000) + 1200;
+
+  showModal(
+    t('swapConfirmSwap'),
+    `<p>${t('swapPay')}: <strong style="color:#FFCC44;">${amount} ${payToken}</strong></p>
+     <p>${t('swapReceive')}: <strong style="color:#00CCFF;">${bestAmounts.toFixed(6)} ${receiveToken}</strong></p>
+     <p style="font-size:11px;color:var(--text-dim);">${t('swapMinReceived')}: ${(bestAmounts * (1 - swapState.slippage / 100)).toFixed(6)} ${receiveToken}<br>
+     ${t('swapSlippageLabel')}: ${swapState.slippage}% | Router: ${CONTRACTS.PancakeRouter.slice(0,10)}...${CONTRACTS.PancakeRouter.slice(-8)}</p>`,
+    async () => {
+      hideModal();
+      try {
+        // Step 1: Check allowance if payToken is USDT
+        if (payToken === 'USDT') {
+          const usdt = new ethers.Contract(CONTRACTS.USDT, USDT_ABI, state.signer);
+          const allowance = await usdt.allowance(state.wallet, CONTRACTS.PancakeRouter);
+          if (allowance.lt(parsedAmount)) {
+            showToast('正在批准 USDT...');
+            const approveTx = await usdt.approve(CONTRACTS.PancakeRouter, parsedAmount);
+            await approveTx.wait();
+            showToast('USDT 批准成功，正在兑换...');
+          }
+        }
+
+        // Step 2: Execute swap
+        let tx;
+        try {
+          tx = await router.swapExactTokensForTokens(parsedAmount, minOut, bestPath, state.wallet, deadline);
+        } catch (e2) {
+          tx = await router.swapExactTokensForTokensSupportingFeeOnTransferTokens(parsedAmount, minOut, bestPath, state.wallet, deadline);
+        }
+
+        showToast('交易已提交，等待确认...');
+        const receipt = await tx.wait();
+        const txHash = receipt.transactionHash;
+        const bscScanLink = 'https://bscscan.com/tx/' + txHash;
+
+        console.log('Swap TX:', txHash);
+        document.getElementById('swapInputAmount').value = '';
+        document.getElementById('swapOutputAmount').value = '';
+        swapState.inputAmount = '';
+        swapState.outputAmount = '';
+        updateSwapButton();
+      } catch (e) {
+        console.error(e);
+        if (e.message && e.message.includes('user rejected')) showToast('交易已取消');
+        else showToast(t('swapTxFailed') + ': ' + (e.reason || e.message || '').slice(0, 60));
+      }
+    }
+  );
+}
+
+// Override switchTab to init swap page
+const _origSwitchTab2 = switchTab;
+switchTab = function(tab) {
+  _origSwitchTab2(tab);
+  if (tab === 'swap') initSwapPage();
+};
+
+// ============ Start ============
+(function() {
+  const canvas = document.getElementById('bgCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let animId = null;
+  let width, height;
+
+  const chars = '0123456789ABCDEFBTCETHURBSC8a3f1c9e4d7b6025'.split('');
+  const particles = [];
+  const PARTICLE_COUNT = 80;
+
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+
+  function createParticle() {
+    return {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      char: chars[Math.floor(Math.random() * chars.length)],
+      size: Math.random() * 14 + 14,
+      speed: Math.random() * 0.5 + 0.15,
+      opacity: Math.random() * 0.45 + 0.35,
+      hue: Math.random() * 20,  // 0-20 offset from base red
+    };
+  }
+
+  function initParticles() {
+    particles.length = 0;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(createParticle());
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+    // Dark red gradient background
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#2a0000');
+    bgGrad.addColorStop(0.5, '#350a0a');
+    bgGrad.addColorStop(1, '#4a0505');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    for (let p of particles) {
+      const r = 255;
+      const g = Math.floor(80 + p.hue * 1.5);
+      const b = Math.floor(30 + p.hue * 2.0);
+      const alpha = p.opacity;
+
+      ctx.font = 'bold ' + p.size + 'px "Courier New", monospace';
+      ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+      ctx.shadowColor = 'rgba(255,60,10,0.8)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(p.char, p.x, p.y);
+      ctx.shadowBlur = 0;
+
+      p.y -= p.speed;
+      if (p.y < -20) {
+        p.y = height + 20;
+        p.x = Math.random() * width;
+        p.char = chars[Math.floor(Math.random() * chars.length)];
+      }
+    }
+  }
+
+  function animate() {
+    draw();
+    animId = requestAnimationFrame(animate);
+  }
+
+  function handleVisibility() {
+    if (document.hidden) {
+      if (animId) { cancelAnimationFrame(animId); animId = null; }
+    } else {
+      if (!animId) animate();
+    }
+  }
+
+  resize();
+  initParticles();
+  animate();
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+  document.addEventListener('visibilitychange', handleVisibility);
+})();
+
+initLang();
+init();
+startAnnouncePolling();
+
+</script>
+</body>
+</html>
