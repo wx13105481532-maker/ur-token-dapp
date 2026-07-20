@@ -894,6 +894,14 @@ body { height:100%; font-family: inherit; background: transparent; color: var(--
         </div>
       </div>
     </div>
+    <!-- 团队成员 -->
+    <div class="card" id="teamCard" style="display:none;">
+      <div class="card-title" data-i18n="teamMembers">团队成员</div>
+      <div style="background:rgba(0,204,255,0.08); border:1px solid rgba(0,204,255,0.2); border-radius:10px; padding:16px; text-align:center;">
+        <div style="font-size:28px; font-weight:900; color:var(--cyan);" id="teamTotalDownline">--</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;" data-i18n="totalUmbrellaDownline">伞下总人数</div>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom Nav -->
@@ -1398,6 +1406,7 @@ const state = {
   downlineL2: 0,
   downlineL3: 0,
   totalDownlineCount: 0,
+  teamDownlineCount: null,
   iloRaised: 0,
   iloHardCap: 5000000,
   iloParticipants: 0,
@@ -1469,6 +1478,7 @@ const URTOKEN_ABI = [
   'function referrer(address) view returns (address)',
   'function referralDepth(address) view returns (uint256)',
   'function referralCount(address) view returns (uint256)',
+  'function referrals(address,uint256) view returns (address)',
   'function totalReferralVolume(address) view returns (uint256)',
   'function pendingReferralReward(address) view returns (uint256)',
   'function downlineBalance(address) view returns (uint256)',
@@ -1912,18 +1922,23 @@ function updateILODisplay() {
 }
 
 // ============ Init ============
-function init() {
+async function init() {
   initJsonRpc();
-  tryAutoConnect();
+
+  // Non-wallet-dependent: render immediately
   loadAllChainData();
   startCountdown();
-  handleRefParam();
   updateAllStats();
   renderTierSteps();
   renderStakeRecords();
   renderEarnRecords();
   updateILODisplay();
   updateInviteLink();
+
+  // Wait for auto-connect to complete before wallet-dependent ops
+  await tryAutoConnect();
+
+  handleRefParam();
   checkInviteVisibility();
   if (state.referrerAddr && state.referrerAddr !== '' && state.referrerAddr !== '0x0000000000000000000000000000000000000000') {
     document.getElementById('bindReferrer').style.display = 'none';
@@ -2363,6 +2378,37 @@ function doManualBindReferrer() {
     }
   );
 }
+async function countAllDownlines(address) {
+  const visited = new Set();
+  const MAX_CALLS = 500;
+  let callCount = 0;
+
+  async function recurse(addr) {
+    if (callCount >= MAX_CALLS) return;
+    try {
+      const urToken = new ethers.Contract(CONTRACTS.URToken, URTOKEN_ABI, state.jsonRpcProvider);
+      const count = await urToken.referralCount(addr);
+      callCount++;
+      const n = count.toNumber();
+      for (let i = 0; i < n; i++) {
+        if (callCount >= MAX_CALLS) break;
+        const child = await urToken.referrals(addr, i);
+        callCount++;
+        const childLower = child.toLowerCase();
+        if (!visited.has(childLower)) {
+          visited.add(childLower);
+          await recurse(child);
+        }
+      }
+    } catch (e) {
+      console.log('countAllDownlines error:', e.message);
+    }
+  }
+
+  await recurse(address);
+  return { count: visited.size, exceeded: callCount >= MAX_CALLS };
+}
+
 function updateDownlineStats() {
   document.getElementById('downlineL1').textContent = state.downlineL1;
   document.getElementById('downlineL2').textContent = state.downlineL2;
@@ -2372,6 +2418,17 @@ function updateDownlineStats() {
   document.getElementById('myReferralDepth').textContent = state.referralDepth || '0';
   document.getElementById('pendingRefReward').textContent = formatUR(state.pendingReferralReward);
   document.getElementById('totalRefVolume').textContent = formatUR(state.totalReferralVolume);
+
+  // 异步更新团队总人数
+  if (state.wallet) {
+    countAllDownlines(state.wallet).then(({ count, exceeded }) => {
+      state.teamDownlineCount = count;
+      const display = exceeded ? '500+' : count.toLocaleString();
+      document.getElementById('teamTotalDownline').textContent = display;
+    }).catch(() => {
+      document.getElementById('teamTotalDownline').textContent = '--';
+    });
+  }
 }
 function copyRefLink() {
   const link = document.getElementById('myWalletLink').textContent;
@@ -2483,9 +2540,11 @@ async function loadReferralInfo() {
     const hasReferrer = state.referrerAddr && state.referrerAddr !== '' && state.referrerAddr !== '0x0000000000000000000000000000000000000000';
     const bindSection = document.getElementById('bindReferrer');
     const myRefSection = document.getElementById('myReferral');
+    const teamCard = document.getElementById('teamCard');
     if (hasReferrer) {
       if (bindSection) bindSection.style.display = 'none';
       if (myRefSection) myRefSection.style.display = 'block';
+      if (teamCard) teamCard.style.display = 'block';
     }
     checkInviteVisibility();
   } catch (e) {
@@ -2549,6 +2608,7 @@ function handleRefParam() {
     }
     const short = refAddr.slice(0, 8) + '...' + refAddr.slice(-6);
     showRefBindModal(refAddr, short);
+    switchTab('referral');
   })();
 }
 async function doOnchainBind(refAddr) {
@@ -2565,6 +2625,7 @@ async function doOnchainBind(refAddr) {
     state.pendingReferralReward = 0; state.totalReferralVolume = 0;
     document.getElementById('bindReferrer').style.display = 'none';
     document.getElementById('myReferral').style.display = 'block';
+    document.getElementById('teamCard').style.display = 'block';
     document.getElementById('boundReferrerAddr').textContent = refAddr;
     document.getElementById('myWalletLink').textContent = state.myRefLink;
     document.getElementById('downlineL1').textContent = '0';
